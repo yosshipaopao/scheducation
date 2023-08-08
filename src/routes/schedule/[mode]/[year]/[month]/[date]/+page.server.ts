@@ -99,8 +99,6 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
     } else {
         const baseDate = new Date(year, month - 1, date);
 
-        const detail: { hour: number, info: string, detail: any }[] = [];
-
         const base = scheduleScript.convertDate(baseDate.getFullYear(), baseDate.getMonth() + 1, baseDate.getDate());
         const scheduleData = await db.select({
             time: schedule.time,
@@ -110,29 +108,23 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
         }).from(schedule).where(eq(schedule.date, base));
         //ここdefault
         for (let i = 0; i < 7; i++) {
-            detail.push({
+            data.push({
                 hour: i,
-                info: 'info' + i,
+                subject: 'info' + i,
                 detail: {}
             });
         }
         for (const schedule of scheduleData) {
             const time = schedule.time as number;
-            detail[time] = {
+            data[time] = {
                 hour: time,
-                info: schedule.subject as string,
+                subject: schedule.subject as string,
                 detail: {
                     belongings: schedule.belongings as string,
                     memo: schedule.memo as string
                 }
             };
         }
-        data.push({
-            year: baseDate.getFullYear(),
-            month: baseDate.getMonth() + 1,
-            date: baseDate.getDate(),
-            data: detail
-        });
     }
     return {
         slug: {

@@ -14,16 +14,15 @@
         NavHamburger,
         NavLi,
         NavUl,
-        Dropdown, DropdownHeader, DropdownItem, DropdownDivider
+        Dropdown, DropdownHeader, DropdownItem, DropdownDivider, Chevron
     } from "flowbite-svelte";
 
     import {signIn, signOut} from '@auth/sveltekit/client';
 
 
     $: activeUrl = $page.url.pathname;
-    import type {LayoutData} from './$types';
 
-    export let data: LayoutData;
+    const date = new Date();
 </script>
 <header>
     <Navbar let:hidden let:toggle
@@ -36,7 +35,8 @@
         </NavBrand>
         <div class="flex items-center gap-4 md:order-2">
             <DarkMode/>
-            <Avatar id="user-menu" src={$page.data.session?.user?.image??"/icon/icon-512x512.png"}/>
+            <Avatar id="user-menu" class="cursor-pointer"
+                    src={$page.data.session?.user?.image??"/icon/icon-512x512.png"}/>
             <NavHamburger on:click={toggle} class1="w-full md:flex md:w-auto md:order-1"/>
         </div>
         <Dropdown placement="bottom" triggeredBy="#user-menu">
@@ -58,10 +58,19 @@
         </Dropdown>
         <NavUl {hidden} divClass="w-full md:block md:w-auto ml-auto">
             <NavLi href="/" active={activeUrl==="/"}>HOME</NavLi>
+            <NavLi id="nav-schedule" class="cursor-pointer" active={activeUrl.startsWith("/schedule")}>
+                <Chevron aligned>SCHEDULE</Chevron>
+            </NavLi>
+
+            <Dropdown triggeredBy="#nav-schedule" class="w-[80vw] md:w-44 z-20">
+                <DropdownItem href={`/schedule/month/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Month</DropdownItem>
+                <DropdownItem href={`/schedule/week/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Week</DropdownItem>
+                <DropdownItem href={`/schedule/date/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Date</DropdownItem>
+            </Dropdown>
         </NavUl>
     </Navbar>
 </header>
-<main class="lg:w-[1024px] w-full mx-auto mt-12 min-h-screen">
+<main class="lg:w-[1024px] w-full mx-auto pt-12 min-h-screen">
     <slot/>
 </main>
 <Footer>
