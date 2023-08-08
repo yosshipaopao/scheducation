@@ -45,9 +45,7 @@
                     <span class="block text-sm"> {$page.data.session.user?.name} </span>
                     <span class="block truncate text-sm font-medium"> {$page.data.session.user?.email} </span>
                 </DropdownHeader>
-                <DropdownItem>Dashboard</DropdownItem>
                 <DropdownItem>Settings</DropdownItem>
-                <DropdownItem>Earnings</DropdownItem>
                 <DropdownDivider/>
                 <DropdownItem on:click={signOut}>Sign out</DropdownItem>
             {:else}
@@ -63,7 +61,7 @@
         </NavUl>
     </Navbar>
 </header>
-<main class="lg:w-[70%] w-full mx-auto mt-12 min-h-screen">
+<main class="lg:w-[1024px] w-full mx-auto mt-12 min-h-screen">
     <slot/>
 </main>
 <Footer>

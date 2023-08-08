@@ -16,6 +16,9 @@ export const handle = SvelteKitAuth(async (event) => {
             },
 
         })],
+        pages:{
+            signIn: "/signin",
+        },
         callbacks: {
             async session({session}) {
                 return session
