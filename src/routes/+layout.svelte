@@ -1,0 +1,75 @@
+<script lang="ts">
+    import "../app.postcss";
+
+    import {page} from '$app/stores';
+
+    import {
+        Avatar,
+        DarkMode,
+        Footer,
+        FooterCopyright, FooterLink,
+        FooterLinkGroup,
+        Navbar,
+        NavBrand,
+        NavHamburger,
+        NavLi,
+        NavUl,
+        Dropdown, DropdownHeader, DropdownItem, DropdownDivider
+    } from "flowbite-svelte";
+
+    import {signIn, signOut} from '@auth/sveltekit/client';
+
+
+    $: activeUrl = $page.url.pathname;
+    import type {LayoutData} from './$types';
+
+    export let data: LayoutData;
+</script>
+<header>
+    <Navbar let:hidden let:toggle
+            navClass="fixed px-4 py-2.5 w-full z-20 top-0 left-0 border-b">
+        <NavBrand href="/">
+            <img src="/icon/icon-512x512.png" alt="logo" class="w-10 h-10 mr-2 rounded-full"/>
+            <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
+                Scheducation
+            </span>
+        </NavBrand>
+        <div class="flex items-center gap-4 md:order-2">
+            <DarkMode/>
+            <Avatar id="user-menu" src={$page.data.session?.user?.image??"/icon/icon-512x512.png"}/>
+            <NavHamburger on:click={toggle} class1="w-full md:flex md:w-auto md:order-1"/>
+        </div>
+        <Dropdown placement="bottom" triggeredBy="#user-menu">
+            {#if $page.data.session}
+                <DropdownHeader>
+                    <span class="block text-sm"> {$page.data.session.user?.name} </span>
+                    <span class="block truncate text-sm font-medium"> {$page.data.session.user?.email} </span>
+                </DropdownHeader>
+                <DropdownItem>Dashboard</DropdownItem>
+                <DropdownItem>Settings</DropdownItem>
+                <DropdownItem>Earnings</DropdownItem>
+                <DropdownDivider/>
+                <DropdownItem on:click={signOut}>Sign out</DropdownItem>
+            {:else}
+                <DropdownHeader>
+                    Not signed in
+                </DropdownHeader>
+                <DropdownDivider/>
+                <DropdownItem on:click={()=>signIn("google")}>Sign In</DropdownItem>
+            {/if}
+        </Dropdown>
+        <NavUl {hidden} divClass="w-full md:block md:w-auto ml-auto">
+            <NavLi href="/" active={activeUrl==="/"}>HOME</NavLi>
+        </NavUl>
+    </Navbar>
+</header>
+<main class="lg:w-[70%] w-full mx-auto mt-12 min-h-screen">
+    <slot/>
+</main>
+<Footer>
+    <FooterCopyright href="https://yosshipaopao.com" by="yosshipaopao" year={2023}/>
+    <FooterLinkGroup ulClass="flex flex-wrap items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
+        <FooterLink href="/about">About</FooterLink>
+        <FooterLink href="/privacy">Privacy Policy</FooterLink>
+    </FooterLinkGroup>
+</Footer>
