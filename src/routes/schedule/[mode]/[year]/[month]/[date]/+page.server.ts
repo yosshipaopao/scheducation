@@ -1,8 +1,8 @@
 import {redirect} from '@sveltejs/kit';
 import type {PageServerLoad} from './$types';
 import {db} from "$lib/server/db";
-import {schedule} from "$lib/schema";
-import {and, eq, gte, lte} from "drizzle-orm";
+import {schedule,subject} from "$lib/schema";
+import {and, eq, gte, lte,inArray} from "drizzle-orm";
 import scheduleScript from "$lib/schedule";
 
 export const load = (async ({params, locals}: { params: any, locals: any }) => {
@@ -17,7 +17,7 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
     }
     const {mode, year, month, date} = scheduleScript.check(param.mode, param.year, param.month, param.date);
     if (params.mode !== mode.toString() || params.year !== year.toString()|| params.month !== month.toString() || params.date !== date.toString()) throw redirect(303, `/schedule/${mode}/${year}/${month}/${date}`);
-    //todo データの受け渡し
+
     const data: any[] = [];
     if (mode == 'month') {
         const baseMonth = new Date(year, month - 1, 1);
@@ -106,19 +106,37 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
             belongings: schedule.belongings,
             memo: schedule.memo,
         }).from(schedule).where(eq(schedule.date, base));
+        const day = baseDate.getDay();
+        const rawData= await db.select().from(schedule).where(eq(schedule.date, day)).orderBy(schedule.time);
         //ここdefault
-        for (let i = 0; i < 7; i++) {
+        const subjectsId:string[]= [];
+        for(const d of rawData) subjectsId.push(d.subject as string);
+        const subjects = new Map<string, { name:string,short:string }>();
+        if(subjectsId.length !== 0) {
+            const subjectData = await db.select({
+                id: subject.id,
+                name: subject.name,
+                short: subject.short
+            }).from(subject).where(inArray(subject.id, subjectsId));
+            for (const d of subjectData) subjects.set(d.id as string, {
+                name: d.name as string,
+                short: d.short as string
+            });
+        }for(const d of rawData) {
             data.push({
-                hour: i,
-                subject: 'info' + i,
-                detail: {}
+                hour: d.time as number,
+                subject: subjects.get(d.subject as string),
+                detail: {
+                    belongings: d.belongings as string,
+                    memo: d.memo as string
+                }
             });
         }
         for (const schedule of scheduleData) {
             const time = schedule.time as number;
             data[time] = {
                 hour: time,
-                subject: schedule.subject as string,
+                subject: subjects.get(schedule.subject as string),
                 detail: {
                     belongings: schedule.belongings as string,
                     memo: schedule.memo as string

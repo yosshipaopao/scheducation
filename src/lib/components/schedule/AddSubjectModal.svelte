@@ -41,16 +41,16 @@
             </div>
             <div>
                 <Label for="teacher" class="mb-2">Teacher</Label>
-                <Input type="text" id="teacher" placeholder="先生" required bind:value={subjectForm.teacher}/>
+                <Input type="text" id="teacher" placeholder="先生" bind:value={subjectForm.teacher}/>
             </div>
             <div>
                 <Label for="room" class="mb-2">Room</Label>
-                <Input type="text" id="room" placeholder="教室" required bind:value={subjectForm.room}/>
+                <Input type="text" id="room" placeholder="教室" bind:value={subjectForm.room}/>
             </div>
         </div>
         <div class="mb-6">
             <Label for="memo" class="mb-2">Memo</Label>
-            <Input type="text" id="memo" placeholder="メモ" required bind:value={subjectForm.memo}/>
+            <Input type="text" id="memo" placeholder="メモ" bind:value={subjectForm.memo}/>
         </div>
         <Button type="submit">追加</Button>
     </form>

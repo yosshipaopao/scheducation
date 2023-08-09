@@ -1,6 +1,6 @@
 <script lang="ts">
     import type {PageData} from './$types';
-    import {Button, ButtonGroup, Card, Select} from "flowbite-svelte";
+    import {Button, ButtonGroup, Card, Input, Select} from "flowbite-svelte";
     import PlusSolid from "flowbite-svelte-icons/PlusSolid.svelte";
     import MinusSolid from "flowbite-svelte-icons/MinusSolid.svelte";
     import AddSubjectModal from "$lib/components/schedule/AddSubjectModal.svelte";
@@ -18,7 +18,11 @@
     <div class="w-full">
         <div class="w-full h-12 flex justify-between items-center mb-4">
             <Button on:click={()=>openSubjectModal=true}>科目を追加</Button>
-            <Button>保存</Button>
+            <form method="POST">
+                <input type="text" name="schedule" value={JSON.stringify(schedule)}/>
+                <input type="text" name="subjects" value={JSON.stringify(subjects)}/>
+                <Button type="submit">保存</Button>
+            </form>
         </div>
         <div class="w-full overflow-x-scroll">
             <div class="w-[960px] grid grid-cols-7 gap-1 sm:gap-2 my-2 ">
@@ -29,8 +33,8 @@
                         </Card>
                         {#each v as w,i}
                             <Card class="h-24 dark:text-white !p-2 flex flex-col items-center justify-center">
-                                <p class="text-2xl dark:text-white">{`${i+1}時間`}</p>
                                 <Select bind:value={w.subject} items={subjectsSelect}/>
+                                <Input bind:value={w.belongings}/>
                             </Card>
                         {/each}
                         <div class="flex justify-center items-center">

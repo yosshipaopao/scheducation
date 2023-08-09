@@ -26,6 +26,8 @@
         else now.setDate(now.getDate() + width);
         return `/schedule/${mode}/${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`
     };
+    const days = ["日", "月", "火", "水", "木", "金", "土"];
+
 </script>
 <Card size="xl" class="mt-4">
     <div class="w-full">
@@ -73,7 +75,7 @@
                         <div class="flex flex-col gap-1 sm:gap-2">
                             <Card href={`/schedule/date/${v.year}/${v.month}/${v.date}`}
                                   class="h-8 !p-1 flex justify-center items-center">
-                                <p class="text-lg dark:text-white">{v.date}</p>
+                                <p class="text-lg dark:text-white">{`${v.date}(${days[new Date(v.year,v.month-1,v.date).getDay()]})`}</p>
                             </Card>
                             {#each v.data as w}
                                 <Card class="h-24 dark:text-white">
@@ -83,9 +85,9 @@
                         </div>
                     {:else}
                         <div class="flex gap-1 sm:gap-2">
-                            <Card class="h-24 aspect-square flex flex-col items-center justify-center">
+                            <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
                                 <p class="text-2xl dark:text-white">{v.hour}</p>
-                                <p class="text-2xl dark:text-white">{v.subject}</p>
+                                <p class="text-2xl dark:text-white">{v.subject.short}</p>
                             </Card>
                             <Card size="xl" class="grow">
                                 <p>{JSON.stringify(v)}</p>

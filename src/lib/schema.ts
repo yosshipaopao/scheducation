@@ -5,7 +5,6 @@ export const schedule = pgTable("schedule", {
     date: integer("date"),
     time: integer("time"),
     subject: varchar("subject"),
-    subjectShort: varchar("subjectShort"),
     belongings: varchar("belongings"),
     memo: text("memo")
 });
