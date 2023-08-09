@@ -16,5 +16,6 @@ export const subject = pgTable("subject", {
     short: varchar("short"),
     teacher: varchar("teacher"),
     room: varchar("room"),
-    memo: text("memo")
+    memo: text("memo"),
+    special: integer("special").default(0)
 });
