@@ -2,7 +2,7 @@ import {redirect} from '@sveltejs/kit';
 import type {PageServerLoad} from './$types';
 import {db} from "$lib/server/db";
 import {schedule,subject} from "$lib/schema";
-import {and, eq, gte, lte,inArray} from "drizzle-orm";
+import {and, eq, gte, lte, inArray, or} from "drizzle-orm";
 import scheduleScript from "$lib/schedule";
 
 export const load = (async ({params, locals}: { params: any, locals: any }) => {
@@ -58,34 +58,55 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
         const finalDate = new Date(startDate);
         startDate.setDate(startDate.getDate() - 3);
         finalDate.setDate(finalDate.getDate() + 3);
+        const startDay = startDate.getDay();
         const start = scheduleScript.convertDate(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
         const final = scheduleScript.convertDate(finalDate.getFullYear(), finalDate.getMonth() + 1, finalDate.getDate());
         const scheduleData = await db.select({
             date: schedule.date,
             time: schedule.time,
             subject: schedule.subject
-        }).from(schedule).where(and(gte(schedule.date, start), lte(schedule.date, final)));
-        const uniqueSchedule = new Map<number, [number, string][]>();
+        }).from(schedule).where(or(and(gte(schedule.date,0),lte(schedule.date,7)),and(gte(schedule.date, start), lte(schedule.date, final)))).orderBy(schedule.date, schedule.time);
+
+
+        const subjectsSet=new Set<string>();
+        const defaultSchedule:string[][] = [[], [], [], [], [], [], []];
+        const uniqueSchedule = new Map<number, { time:number,subject:string }[]>();
         for (const schedule of scheduleData) {
             const date = schedule.date as number;
-            if (uniqueSchedule.has(date)) {
-                uniqueSchedule.get(date)?.push([schedule.time as number, schedule.subject as string]);
-            } else {
-                uniqueSchedule.set(date, [[schedule.time as number, schedule.subject as string]]);
+            if(date>=0&&date<=7) {
+                defaultSchedule[date].push(schedule.subject as string);
+            }else{
+                if (!uniqueSchedule.has(date)) {
+                    uniqueSchedule.set(date, []);
+                }
+                uniqueSchedule.get(date)?.push({time:schedule.time as number, subject:schedule.subject as string});
             }
+            subjectsSet.add(schedule.subject as string);
         }
 
+        const subjectData = (await db.select({
+            id: subject.id,
+            short: subject.short,
+        }).from(subject).where(inArray(subject.id, Array.from(subjectsSet))));
+
+        const subjects = new Map<string, string>();
+        for (const subject of subjectData) subjects.set(subject.id as string, subject.short as string);
+
         for (let i = 0; i < 7; i++) {
-            const detail: (string | number)[][] = [];
-            //ここdefault
-            for (let j = 0; j < 7; j++) {
-                detail.push([j, "default"]);
-            }
+            const detail: { time:number,subject:string }[] = [];
+            for (let j = 0; j < defaultSchedule[(startDay+i)%7].length; j++) detail.push({time:j+1,subject:subjects.get(defaultSchedule[(startDay+i)%7][j])??"不明"});
+
             const dateInt = scheduleScript.convertDate(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
             if (uniqueSchedule.has(dateInt)) {
-                for (const subject of uniqueSchedule.get(dateInt) as [number, string][]) {
-                    if (detail.length <= subject[0]) detail.push([subject[0], subject[1]]);
-                    else detail[subject[0]] = [subject[0], subject[1]];
+                for (const subject of uniqueSchedule.get(dateInt) as { time:number,subject:string }[]){
+                    if(detail.length<=subject.time) detail.push({
+                        time:subject.time,
+                        subject:subjects.get(subject.subject)??"不明"
+                    });
+                    else detail[subject.time]= {
+                        time:subject.time,
+                        subject:subjects.get(subject.subject)??"不明"
+                    };
                 }
             }
             data.push({

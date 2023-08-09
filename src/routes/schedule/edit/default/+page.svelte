@@ -1,9 +1,11 @@
 <script lang="ts">
-    import type {PageData} from './$types';
-    import {Button, ButtonGroup, Card, Input, Select} from "flowbite-svelte";
+    import type {ActionData, PageData} from './$types';
+    import {Button, ButtonGroup, Card, Input, Select, Toast} from "flowbite-svelte";
     import PlusSolid from "flowbite-svelte-icons/PlusSolid.svelte";
     import MinusSolid from "flowbite-svelte-icons/MinusSolid.svelte";
+    import CheckCircleOutline from "flowbite-svelte-icons/CheckCircleOutline.svelte";
     import AddSubjectModal from "$lib/components/schedule/AddSubjectModal.svelte";
+    import {slide} from "svelte/transition";
 
     export let data: PageData;
     const schedule = data.schedule;
@@ -12,6 +14,9 @@
     for(const key in subjects)subjectsSelect.push({name:subjects[key].name,value:key});
     const days = ["日", "月", "火", "水", "木", "金", "土"];
     let openSubjectModal = false;
+    export let form: ActionData;
+    let successToast=form?.success??false;
+    if(successToast)setTimeout(()=>successToast=false,5000);
 </script>
 
 <Card size="xl" class="mt-4">
@@ -19,8 +24,8 @@
         <div class="w-full h-12 flex justify-between items-center mb-4">
             <Button on:click={()=>openSubjectModal=true}>科目を追加</Button>
             <form method="POST">
-                <input type="text" name="schedule" value={JSON.stringify(schedule)}/>
-                <input type="text" name="subjects" value={JSON.stringify(subjects)}/>
+                <input type="hidden" name="schedule" value={JSON.stringify(schedule)}/>
+                <input type="hidden" name="subjects" value={JSON.stringify(subjects)}/>
                 <Button type="submit">保存</Button>
             </form>
         </div>
@@ -54,4 +59,8 @@
     </div>
 </Card>
 <AddSubjectModal bind:open={openSubjectModal} bind:subjects={subjects} bind:subjectsSelect={subjectsSelect}/>
-```
+<Toast simple transition={slide} bind:open={successToast} position="bottom-right" color="gray"
+       divClass='w-full max-w-xs p-4 text-gray-500 bg-white shadow dark:text-blue-400 dark:bg-blue-800 gap-3'>
+    <CheckCircleOutline  slot="icon"/>
+    保存しました
+</Toast>

@@ -61,6 +61,13 @@
         </div>
         <div class="w-full overflow-x-scroll">
             <div class="w-[960px] grid grid-{mode==='date'?'rows':'cols'}-7 gap-1 sm:gap-2 my-2 ">
+                {#if mode === "month"}
+                    {#each days as v}
+                        <Card class="h-8 !p-1 flex justify-center items-center">
+                            <p class="text-lg dark:text-white">{v}</p>
+                        </Card>
+                    {/each}
+                {/if}
                 {#each data.data as v}
                     {#if mode === "month"}
                         <Card href={`/schedule/date/${v.year}/${v.month}/${v.date}`}
