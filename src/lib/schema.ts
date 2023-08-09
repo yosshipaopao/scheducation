@@ -5,6 +5,17 @@ export const schedule = pgTable("schedule", {
     date: integer("date"),
     time: integer("time"),
     subject: varchar("subject"),
+    subjectShort: varchar("subjectShort"),
     belongings: varchar("belongings"),
+    memo: text("memo")
+});
+
+export const subject = pgTable("subject", {
+    count: serial("count").primaryKey(),
+    id: varchar("id"),
+    name: varchar("name"),
+    short: varchar("short"),
+    teacher: varchar("teacher"),
+    room: varchar("room"),
     memo: text("memo")
 });

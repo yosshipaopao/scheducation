@@ -1,5 +1,5 @@
 import {redirect} from '@sveltejs/kit';
-import type {PageLoad} from './$types';
+import type {PageServerLoad} from './$types';
 import {db} from "$lib/server/db";
 import {schedule} from "$lib/schema";
 import {and, eq, gte, lte} from "drizzle-orm";
@@ -136,4 +136,4 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
         data
     }
 
-}) satisfies PageLoad;
+}) satisfies PageServerLoad;

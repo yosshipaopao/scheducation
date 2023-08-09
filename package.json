@@ -12,6 +12,7 @@
   "devDependencies": {
     "@sveltejs/adapter-auto": "^2.1.0",
     "@sveltejs/kit": "^1.22.4",
+    "@types/node": "^20.4.9",
     "autoprefixer": "^10.4.14",
     "flowbite-svelte-icons": "^0.2.6",
     "postcss": "^8.4.27",
