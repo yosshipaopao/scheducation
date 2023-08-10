@@ -29,6 +29,9 @@
     const days = ["日", "月", "火", "水", "木", "金", "土"];
 
 </script>
+<svelte:head>
+    <title>{`${mode} : ${year}/${month+(mode==="month"?"":`/${date}`)} | Scheducation`}</title>
+</svelte:head>
 <Card size="xl" class="mt-4">
     <div class="w-full">
         <div class="w-full h-12 flex justify-between items-center mb-4">

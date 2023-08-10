@@ -26,7 +26,7 @@
         open = false;
     }
 </script>
-<Modal title="教科を追加" bind:open={open} autoclose={false}>
+<Modal title="教科を追加" bind:open={open} autoclose={false} outsideclose>
     <Label for="select-ex" class="mb-0">Example</Label>
     <Select id="select-ex" items={subjectsSelect}/>
     <form on:submit|preventDefault={Submit}>

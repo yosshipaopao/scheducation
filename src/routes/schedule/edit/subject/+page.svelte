@@ -1,14 +1,14 @@
 <script lang="ts">
-    import {Button, Card, Input, Label, Modal, Spinner, Toast} from "flowbite-svelte";
-    import EditOutline from 'flowbite-svelte-icons/EditOutline.svelte';
+    import {Button, ButtonGroup, Card, Input, Label, Modal, Spinner, Toast} from "flowbite-svelte";
     import {slide} from "svelte/transition";
+    import EditOutline from 'flowbite-svelte-icons/EditOutline.svelte';
     import CheckSolid from "flowbite-svelte-icons/CheckSolid.svelte";
-
+    import TrashBinSolid from "flowbite-svelte-icons/TrashBinSolid.svelte";
     export let data;
     let subjects = data.subjects;
     const newSubjectTemplate = () => {
         return {
-            id: crypto.randomUUID(),
+            id: crypto.randomUUID() as string,
             name: "",
             short: "",
             teacher: "",
@@ -65,6 +65,31 @@
         show: false,
         msg: "Success",
     }
+    const deleteSubject=(id:string)=>{
+        const sendData = new FormData();
+        sendData.append("type", "Delete");
+        sendData.append("subject", JSON.stringify({id}));
+        fetch("", {
+            method: "POST",
+            body: sendData,
+        }).then(res=>{
+            if (res.ok) {
+                successToast.show = true;
+                successToast.msg = "Success";
+                subjects=subjects.filter(subject=>subject.id!==id);
+                setTimeout(() => {
+                    successToast.show = false;
+                }, 5000);
+            } else throw res;
+        }).catch(e=>{
+            console.error(e);
+            errorToast.show = true;
+            errorToast.msg = e.error??e.statusText + " " + e.status;
+            setTimeout(() => {
+                errorToast.show = false;
+            }, 5000);
+        })
+    }
 </script>
 <Card size="xl" class="mt-4 flex flex-col items-center gap-2">
     {#each subjects as subject}
@@ -82,9 +107,14 @@
                 </div>
                 <p>Memo:{subject.memo}</p>
             </div>
-            <Button class="ml-auto" on:click={()=>{editType="Edit";editingSubject=subject;newSubjectModal=true}}>
-                <EditOutline/>
-            </Button>
+            <div class="flex flex-col gap-2">
+                <Button class="ml-auto" on:click={()=>{editType="Edit";editingSubject=subject;newSubjectModal=true}}>
+                    <EditOutline/>
+                </Button>
+                <Button class="ml-auto" on:click={()=>deleteSubject(subject.id)}>
+                    <TrashBinSolid/>
+                </Button>
+            </div>
         </Card>
     {/each}
     <div class="w-full flex justify-end">
@@ -96,7 +126,7 @@
 <Modal title="{editType} new Subject" bind:open={newSubjectModal} outsideclose={!running} size="lg">
     {#if running}
         <div class="flex justify-center items-center h-64">
-            <Spinner size={24}/>
+            <Spinner size="24"/>
         </div>
     {:else }
         <div class="grid gap-6 mb-6 md:grid-cols-2">

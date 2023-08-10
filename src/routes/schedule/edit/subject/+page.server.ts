@@ -27,7 +27,6 @@ export const actions = {
         const body = await request.formData();
         const type = body.get("type") as string;
         const newSubjectsData = JSON.parse(body.get("subject") as string);
-        console.log(type, newSubjectsData);
         if(type==="Edit") {
             await db.update(subject).set({
                 name: newSubjectsData.name,
@@ -48,6 +47,7 @@ export const actions = {
         }else if(type==="Delete") {
             const check = await db.select().from(schedule).where(eq(schedule.subject, newSubjectsData.id)).limit(1);
             if (check.length === 0) await db.delete(subject).where(eq(subject.id, newSubjectsData.id));
+            else throw error(403, "Used Subject");
         }
     }
 } satisfies Actions;

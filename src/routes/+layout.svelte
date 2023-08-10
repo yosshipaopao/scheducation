@@ -66,11 +66,13 @@
                 <DropdownItem href={`/schedule/month/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Month</DropdownItem>
                 <DropdownItem href={`/schedule/week/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Week</DropdownItem>
                 <DropdownItem href={`/schedule/date/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Date</DropdownItem>
+                <DropdownDivider/>
+                <DropdownItem href="/schedule/edit">Edit</DropdownItem>
             </Dropdown>
         </NavUl>
     </Navbar>
 </header>
-<main class="lg:w-[1024px] w-full mx-auto pt-12 min-h-screen">
+<main class="lg:w-[1024px] w-full mx-auto pt-12 min-h-fitScreen">
     <slot/>
 </main>
 <Footer>

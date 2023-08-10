@@ -68,11 +68,8 @@ export const load = (async ({params, locals}: { params: any, locals: any }) => {
         const uniqueSchedule = new Map<number, [number, string][]>();
         for (const schedule of scheduleData) {
             const date = schedule.date as number;
-            if (uniqueSchedule.has(date)) {
-                uniqueSchedule.get(date)?.push([schedule.time as number, schedule.subject as string]);
-            } else {
-                uniqueSchedule.set(date, [[schedule.time as number, schedule.subject as string]]);
-            }
+            if (uniqueSchedule.has(date)) uniqueSchedule.set(date,[]);
+            uniqueSchedule.get(date)?.push([schedule.time as number, schedule.subject as string]);
         }
 
         for (let i = 0; i < 7; i++) {

@@ -13,6 +13,9 @@ const config = {
   darkMode: 'class',
 
   theme: {
+    minHeight:{
+        'fitScreen': 'calc(100vh - 4rem)',
+    },
     extend: {
       colors: {
         // flowbite-svelte
