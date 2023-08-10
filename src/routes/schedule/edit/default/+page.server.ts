@@ -1,39 +1,18 @@
 import {error, redirect} from "@sveltejs/kit";
 import {db} from "$lib/server/db";
-import {schedule, subject} from "$lib/schema";
 import type {PageServerLoad, Actions} from "./$types";
-import {and, asc, eq, inArray, lte} from "drizzle-orm";
+import {GetDefaultWeekSchedule, GetDetailSubjects} from "$lib/server/schedule/Data";
+import {schedule, subject} from "$lib/schema";
+import {and, eq} from "drizzle-orm";
 
 export const load = (async ({locals}: { locals: any }) => {
     const session = await locals.getSession();
     if (!session?.user) throw redirect(303, "/signin");
 
-    const scheduleData = await db.select({
-        date: schedule.date,
-        time: schedule.time,
-        subject: schedule.subject,
-        belongings: schedule.belongings,
-    }).from(schedule).where(lte(schedule.date, 7)).orderBy(asc(schedule.date), asc(schedule.time));
+    const defaultSchedule = await GetDefaultWeekSchedule(db);
+    const subjects = await GetDetailSubjects(db);
 
-    const uniqueSchedule: any[][] = [[], [], [], [], [], [], []];
-    for (const schedule of scheduleData) {
-        const date = schedule.date as number;
-        uniqueSchedule[date].push({
-            time: schedule.time,
-            subject: schedule.subject,
-            belongings: schedule.belongings,
-        });
-    }
-    const subjects: {
-        [key: string]: { id: string, short: string, name: string, teacher: string, room: string, memo: string }
-    } = {};
-    const subjectsData = await db.select().from(subject);
-    for (const sub of subjectsData) {
-        // @ts-ignore
-        subjects[sub.id] = sub;
-    }
-
-    return {schedule: uniqueSchedule, subjects};
+    return {schedule: defaultSchedule, subjects};
 }) satisfies PageServerLoad;
 
 export const actions = {
@@ -41,63 +20,55 @@ export const actions = {
         const session = await locals.getSession();
         if (!session?.user) throw error(401, "Unauthorized");
         const body = await request.formData();
-        const newScheduleData = JSON.parse(body.get("schedule") as string);
-        const newSubjectsData = JSON.parse(body.get("subjects") as string);
-        const oldSubjects = await db.select().from(subject).where(inArray(subject.id, Object.keys(newSubjectsData)));
-        const oldSubjectIds = oldSubjects.map(sub => sub.id);
-        const newSubjects = Object.keys(newSubjectsData).filter(id => !oldSubjectIds.includes(id)).map(id => newSubjectsData[id]);
-        const oldSchedule = await db.select({
-            date: schedule.date,
-            time: schedule.time,
-            subject: schedule.subject,
-            belongings: schedule.belongings,
-        }).from(schedule).where(lte(schedule.date, 7)).orderBy(asc(schedule.date), asc(schedule.time));
-        const oldFixedSchedule: any[][] = [[], [], [], [], [], [], []];
-        for (const schedule of oldSchedule) {
-            const date = schedule.date as number;
-            oldFixedSchedule[date].push({
-                time: schedule.time,
-                subject: schedule.subject,
-                belongings: schedule.belongings,
-            });
-        }
+        const rawSchedule = JSON.parse(body.get("schedule") as string);
+        const rawSubjects = JSON.parse(body.get("subjects") as string);
+        const oldSchedule = await GetDefaultWeekSchedule(db);
+        const oldSubjects = await GetDetailSubjects(db);
         const newSchedules: any[] = [];
         const updateSchedules: any[] = [];
         const deleteSchedules: any[] = [];
         for (let i = 0; i < 7; i++) {
-            for (let j = 0; j < Math.max(oldFixedSchedule[i].length, newScheduleData[i].length); j++) {
-                if (oldFixedSchedule[i][j] === undefined || newScheduleData[i][j] === undefined || oldFixedSchedule[i][j].subject !== newScheduleData[i][j].subject || oldFixedSchedule[i][j].belongings !== newScheduleData[i][j].belongings) {
-                    const newType = oldFixedSchedule[i][j] === undefined ? "new" : newScheduleData[i][j] === undefined ? "delete" : "update";
-                    if (newType === "new") newSchedules.push({
+            for (let j = 0; j < Math.max(oldSchedule[i].length, rawSchedule[i].length); j++) {
+                if (oldSchedule[i][j] === undefined) {
+                    newSchedules.push({
                         date: i,
                         time: j,
-                        subject: newScheduleData[i][j].subject,
-                        belongings: newScheduleData[i][j].belongings
+                        subject: rawSchedule[i][j].subject,
                     });
-                    else if (newType === "update") updateSchedules.push({
+                } else if (rawSchedule[i][j] === undefined) {
+                    deleteSchedules.push({
                         date: i,
                         time: j,
-                        subject: newScheduleData[i][j].subject,
-                        belongings: newScheduleData[i][j].belongings
                     });
-                    else if (newType === "delete") deleteSchedules.push({day: i, time: j});
+                } else {
+                    const oldScheduleData = oldSchedule[i][j];
+                    const newScheduleData = rawSchedule[i][j];
+                    if (oldScheduleData.subject.id !== newScheduleData.subject) {
+                        updateSchedules.push({
+                            date: i,
+                            time: j,
+                            subject: newScheduleData.subject,
+                        });
+                    }
                 }
             }
         }
-        console.log(newSchedules, updateSchedules, deleteSchedules);
+        const newSubjects: any[] = [];
+        const oldSubjectIds = new Set<string>(oldSubjects.map(sub => sub.id));
+        for (const sub of rawSubjects) if (!oldSubjectIds.has(sub.id)) newSubjects.push(sub);
+
         try {
-            if (newSchedules.length !== 0)await db.insert(schedule).values(newSchedules);
-            if (deleteSchedules.length !== 0) for (const s of deleteSchedules)await db.delete(schedule).where(and(eq(schedule.date, s.day), eq(schedule.time, s.time)));
+            if (newSchedules.length !== 0) await db.insert(schedule).values(newSchedules);
+            if (deleteSchedules.length !== 0) for (const s of deleteSchedules) await db.delete(schedule).where(and(eq(schedule.date, s.date), eq(schedule.time, s.time)));
             if (updateSchedules.length !== 0) for (const s of updateSchedules) await db.update(schedule).set(s).where(and(eq(schedule.date, s.date), eq(schedule.time, s.time)));
         } catch (e) {
             console.error(e);
         }
-        console.log(newSubjects);
         try {
-            if(newSchedules.length!==0) await db.insert(subject).values(newSubjects);
+            if (newSchedules.length !== 0) await db.insert(subject).values(newSubjects);
         } catch (e) {
             console.error(e);
         }
-        return { success: true };
+        return {success: true};
     }
 } satisfies Actions;

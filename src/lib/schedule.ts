@@ -31,4 +31,11 @@ const convertDate = (year:number,month:number,day:number)=>{
     return parseInt(date);
 }
 
-export default {defaults,check,convertDate};
+const restoreDate = (date:number)=>{
+    const year = Math.floor(date / 10000);
+    const month = Math.floor((date % 10000) / 100);
+    const day = date % 100;
+    return {year,month,date:day};
+}
+
+export default {defaults,check,convertDate,restoreDate};

@@ -9,13 +9,15 @@ export interface DetailSubjectData {
     name: string,
     teacher: string | null,
     room: string | null
-    memo: string | null
+    memo: string | null,
+    special: number
 }
 
 export interface SubjectData {
     id: string,
     short: string,
-    name: string
+    name: string,
+    special: number
 }
 
 export interface DetailScheduleData {
@@ -30,12 +32,33 @@ export interface ScheduleData {
     time: number,
     subject: SubjectData,
 }
+
+export interface DayMonthScheduleData {
+    date: number,
+    special: number,
+    info: string
+}
+
 export type DetailSubjectsMap = Map<string, DetailSubjectData>;
 export type SubjectsMap = Map<string, SubjectData>;
 
+export type DateSchedule = DetailScheduleData[];
 export type WeekSchedule = [ScheduleData[], ScheduleData[], ScheduleData[], ScheduleData[], ScheduleData[], ScheduleData[], ScheduleData[]]
+export type MonthSchedule = DayMonthScheduleData[];
 
+export const GetDetailSubjects= async (DB: typeof db): Promise<DetailSubjectData[]> => {
+    return await DB.select({
+        id: subject.id,
+        short: subject.short,
+        name: subject.name,
+        teacher: subject.teacher,
+        room: subject.room,
+        memo: subject.memo,
+        special: subject.special
+    }).from(subject) as DetailSubjectData[];
+}
 export const GetDetailSubjectsFromSubjectsId = async (DB: typeof db, subjectsId: Set<string>): Promise<DetailSubjectsMap> => {
+    if (subjectsId.size === 0) return new Map() as DetailSubjectsMap;
     const subjects: DetailSubjectsMap = new Map();
     const subjectsData = await DB.select({
         id: subject.id,
@@ -43,7 +66,8 @@ export const GetDetailSubjectsFromSubjectsId = async (DB: typeof db, subjectsId:
         name: subject.name,
         teacher: subject.teacher,
         room: subject.room,
-        memo: subject.memo
+        memo: subject.memo,
+        special: subject.special
     }).from(subject).where(inArray(subject.id, Array.from(subjectsId))) as DetailSubjectData[];
     for (const sub of subjectsData) {
         subjects.set(sub.id as string, sub);
@@ -51,32 +75,55 @@ export const GetDetailSubjectsFromSubjectsId = async (DB: typeof db, subjectsId:
     return subjects;
 }
 export const GetSubjectsFromSubjectsId = async (DB: typeof db, subjectsId: Set<string>): Promise<SubjectsMap> => {
-    const subjects: SubjectsMap = new Map();
+    if (subjectsId.size === 0) return new Map() as SubjectsMap;
     const subjectsData = await DB.select({
         id: subject.id,
         short: subject.short,
-        name: subject.name
+        name: subject.name,
+        special: subject.special
     }).from(subject).where(inArray(subject.id, Array.from(subjectsId))) as SubjectData[];
-    for (const sub of subjectsData) {
-        subjects.set(sub.id as string, sub);
-    }
+    const subjects: SubjectsMap = new Map();
+    for (const sub of subjectsData) subjects.set(sub.id as string, sub);
     return subjects;
 }
+export const GetDefaultDateSchedule = async (DB: typeof db, day: number, subjectsArg: SubjectsMap | null = null): Promise<DateSchedule> => {
+    const data:DateSchedule = [];
+    const rawData = await DB.select().from(schedule).where(eq(schedule.date, day)).orderBy(schedule.time);
+    const subjects = subjectsArg ?? await GetDetailSubjectsFromSubjectsId(DB, new Set<string>(rawData.map((schedule) => schedule.subject as string)));
+    for (const d of rawData) data.push({
+        time: d.time as number,
+        subject: subjects.get(d.subject as string) as DetailSubjectData,
+        belongings: d.belongings as string,
+        memo: d.memo as string
+    });
+    return data;
+}
 
-export const GetDateSchedule = async (DB: typeof db, date: Date | number, subjectsArg: DetailSubjectsMap | null = null): Promise<DetailScheduleData[]> => {
+export const GetDateSchedule = async (DB: typeof db, date: Date, subjectsArg: DetailSubjectsMap | null = null): Promise<DateSchedule> => {
     //DBのdateはnumber型
-    const base = typeof date == "number" ? date : scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    const base = scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    //DetailScheduleDataの配列を作成
+    const data: DateSchedule = await GetDefaultDateSchedule(DB, date.getDay(), subjectsArg);
     //DBから取得
     const scheduleData = await DB.select().from(schedule).where(eq(schedule.date, base)).orderBy(schedule.time);
     //subjectsArgがnullの場合はDBから取得する
     const subjects = subjectsArg ?? await GetDetailSubjectsFromSubjectsId(DB, new Set<string>(scheduleData.map((schedule) => schedule.subject as string)));
-    //scheduleDataをScheduleDataに変換
-    return scheduleData.map((schedule) => ({
-        time: schedule.time,
-        subject: subjects.get(schedule.subject as string) as DetailSubjectData,
-        belongings: schedule.belongings as string,
-        memo: schedule.memo as string
-    }) as DetailScheduleData)
+    //dataに追加
+    for (const d of scheduleData) {
+        if(data.length <= (d.time as number)) data.push({
+            time: d.time as number,
+            subject: subjects.get(d.subject as string) as DetailSubjectData,
+            belongings: d.belongings as string,
+            memo: d.memo as string
+        });
+        else data[d.time as number] = {
+            time: d.time as number,
+            subject: subjects.get(d.subject as string) as DetailSubjectData,
+            belongings: d.belongings as string,
+            memo: d.memo as string
+        }
+    }
+    return data;
 }
 
 export const GetDefaultWeekSchedule = async (DB: typeof db, subjectsArg: SubjectsMap | null = null): Promise<WeekSchedule> => {
@@ -137,6 +184,44 @@ export const GetWeekSchedule = async (DB: typeof db, baseDate: Date, subjectsArg
     return data;
 }
 
-export const GetMonthSchedule = async (DB: typeof db, startDate: Date, subjectsArg: SubjectsMap | null = null) => {
-
+export const GetMonthSchedule = async (DB: typeof db, baseMonth: Date, subjectsArg: SubjectsMap | null = null) => {
+    const startDate = new Date(baseMonth);
+    startDate.setDate(-baseMonth.getDay() + 1);
+    const finalDate = new Date(baseMonth);
+    finalDate.setMonth(finalDate.getMonth() + 1);
+    finalDate.setDate(0)
+    finalDate.setDate(finalDate.getDate() + (6 - finalDate.getDay()));
+    const total = (finalDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
+    const start = scheduleScript.convertDate(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
+    const final = scheduleScript.convertDate(finalDate.getFullYear(), finalDate.getMonth() + 1, finalDate.getDate());
+    const scheduleData = await DB.select({
+        date: schedule.date,
+        subject: schedule.subject,
+    }).from(schedule).where(and(gte(schedule.date, start), lte(schedule.date, final)));
+    const subjects = subjectsArg ?? await GetSubjectsFromSubjectsId(DB, new Set<string>(scheduleData.map((schedule) => schedule.subject as string)));
+    const scheduleMap = new Map<number, DayMonthScheduleData>();
+    for (const d of scheduleData) {
+        const date = d.date as number;
+        const subject = subjects.get(d.subject as string) as SubjectData;
+        if (subject.special !== 0) {
+            if (!scheduleMap.has(date)) scheduleMap.set(date, {
+                date: date,
+                special: subject.special,
+                info: subject.short
+            });
+        }
+    }
+    const data: MonthSchedule = [];
+    for (let i = 0; i < total; i++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + i);
+        const dateInt = scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+        if (scheduleMap.has(dateInt)) data.push(scheduleMap.get(dateInt) as DayMonthScheduleData);
+        else data.push({
+            date: dateInt,
+            special: 0,
+            info: ""
+        });
+    }
+    return data;
 }

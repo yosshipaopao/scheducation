@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Button, ButtonGroup, Card, Input, Label, Modal, Spinner, Toast} from "flowbite-svelte";
+    import {Button, Card, Input, Label, Modal, Spinner, Toast} from "flowbite-svelte";
     import {slide} from "svelte/transition";
     import EditOutline from 'flowbite-svelte-icons/EditOutline.svelte';
     import CheckSolid from "flowbite-svelte-icons/CheckSolid.svelte";
@@ -33,6 +33,13 @@
             if (res.ok) {
                 successToast.show = true;
                 successToast.msg = "Success";
+                if (type === "Add") {
+                    subjects.push(editingSubject);
+                    subjects=subjects
+                    editingSubject = newSubjectTemplate();
+                }else {
+                    subjects=subjects
+                }
                 setTimeout(() => {
                     successToast.show = false;
                 }, 5000);
@@ -46,7 +53,7 @@
         } catch (e) {
             console.error(e);
             errorToast.show = true;
-            errorToast.msg = e.error;
+            errorToast.msg = e.error??e.statusText + " " + e.status
             setTimeout(() => {
                 errorToast.show = false;
             }, 5000);

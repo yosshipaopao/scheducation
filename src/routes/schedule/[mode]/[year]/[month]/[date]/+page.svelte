@@ -11,6 +11,7 @@
     import MonthSkeleton from "$lib/components/schedule/MonthSkeleton.svelte";
     import WeekSkeleton from "$lib/components/schedule/WeekSkeleton.svelte";
     import DateSkeleton from "$lib/components/schedule/DateSkeleton.svelte";
+    import scheduleScript from "$lib/schedule";
 
     export let data: PageData;
     $:mode = data.slug.mode;
@@ -31,6 +32,26 @@
     };
     const days = ["日", "月", "火", "水", "木", "金", "土"];
 
+    const getDateInfo=(w:number)=>{
+        if (mode==="month") {
+            const now = scheduleScript.restoreDate(w);
+            const date=new Date(now.year,now.month-1,now.date);
+            return {
+                year:date.getFullYear(),
+                month:date.getMonth()+1,
+                date:date.getDate(),
+                day:date.getDay()
+            };
+        }
+        const base = new Date(year,month-1,date);
+        base.setDate(base.getDate()+w);
+        return {
+            year:base.getFullYear(),
+            month:base.getMonth()+1,
+            date:base.getDate(),
+            day:base.getDay()
+        };
+    }
 </script>
 <svelte:head>
     <title>{`${mode} : ${year}/${month + (mode === "month" ? "" : `/${date}`)} | Scheducation`}</title>
@@ -83,44 +104,46 @@
                     <DateSkeleton/>
                 {/if}
             {:then value}
-                {#each value as v}
-                    {#if mode === "month"}
-                        <Card href={`/schedule/date/${v.year}/${v.month}/${v.date}`}
-                              class="h-28 !p-4 relative dark:text-white">
-                            {#if v.unique}
+                {#if mode === "month"}
+                    {#each value as v}
+                        <Card href={`/schedule/date/${getDateInfo(v.date).year}/${getDateInfo(v.date).month}/${getDateInfo(v.date).date}`}
+                              class="h-28 !p-4 relative dark:text-white flex flex-col items-center justify-center">
+                            {#if v.special !== 0}
                                 <Indicator color="red" border size="xl" placement="top-right"/>
                             {/if}
-                            <p>{`${v.month}/${v.date}`}</p>
-                            <p>{v.info}</p>
+                            <p class="text-2xl">{`${getDateInfo(v.date).month}/${getDateInfo(v.date).date}(${days[getDateInfo(v.date).day]})`}</p>
+                            <p class="text-2xl">{v.info.length?v.info:"通常"}</p>
                         </Card>
-                    {:else if mode === "week"}
-                        <div class="flex flex-col gap-1 sm:gap-2">
-                            <Card href={`/schedule/date/${v.year}/${v.month}/${v.date}`}
-                                  class="h-8 !p-1 flex justify-center items-center">
-                                <p class="text-lg dark:text-white">{`${v.date}(${days[new Date(v.year, v.month - 1, v.date).getDay()]})`}</p>
-                            </Card>
-                            {#each v.data as w}
-                                <Card class="h-24 !p-2 dark:text-white">
-                                    {JSON.stringify(w)}
+                    {/each}
+                {:else if mode === "week"}
+                    {#each value as v,i}
+                            <div class="flex flex-col gap-1 sm:gap-2">
+                                <Card class="h-8 !p-1 flex justify-center items-center">
+                                    <p class="text-lg dark:text-white">{`${getDateInfo(i-3).month}/${getDateInfo(i-3).date}(${days[getDateInfo(i-3).day]})`}</p>
                                 </Card>
-                            {/each}
-                        </div>
-                    {:else}
+                                {#each v as w}
+                                    <Card class="h-24 !p-2 dark:text-white">
+                                        {JSON.stringify(w)}
+                                    </Card>
+                                {/each}
+                            </div>
+                        {/each}
+                {:else}
+                    {#each value as v}
                         <div class="flex gap-1 sm:gap-2">
                             <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
-                                <p class="text-2xl dark:text-white">{v.hour}</p>
+                                <p class="text-2xl dark:text-white">{v.time+1}</p>
                                 <p class="text-2xl dark:text-white">{v.subject.short}</p>
                             </Card>
                             <Card size="xl" class="grow">
                                 <p>{JSON.stringify(v)}</p>
                             </Card>
                         </div>
-                    {/if}
-                {/each}
+                    {/each}
+                {/if}
             {:catch error}
                 <p>{error.message}</p>
             {/await}
-
         </div>
     </div>
 </Card>

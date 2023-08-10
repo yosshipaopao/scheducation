@@ -1,7 +1,7 @@
 <script lang="ts">
     import {Modal, Button, Select, Label, Input} from "flowbite-svelte";
     export let open = false;
-    export let subjects : {[key: string]: { id: string, short: string, name: string, teacher: string, room: string, memo: string }} ={};
+    export let subjects;
     export let subjectsSelect : { value: string, name: string }[];
 
     const subjectForm={
@@ -15,14 +15,15 @@
         const id = crypto.randomUUID();
         subjectsSelect.push({value: id, name: subjectForm.name});
         subjectsSelect=subjectsSelect;
-        subjects[id]={
+        subjects.push({
             id: id,
             short: subjectForm.short,
             name: subjectForm.name,
             teacher: subjectForm.teacher,
             room: subjectForm.room,
             memo: subjectForm.memo
-        };
+        });
+        subjects=subjects;
         open = false;
     }
 </script>

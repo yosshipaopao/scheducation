@@ -3,19 +3,13 @@ import {schedule, subject} from "$lib/schema";
 import type {Actions, PageServerLoad} from "./$types";
 import {error, redirect} from "@sveltejs/kit";
 import {eq} from "drizzle-orm";
+import { GetDetailSubjects} from "$lib/server/schedule/Data";
 
 export const load = (async ({parent}) => {
     const {session} = await parent();
     if (!session?.user) throw redirect(303, "/signin");
 
-    const subjects = await db.select({
-        id: subject.id,
-        name: subject.name,
-        short: subject.short,
-        teacher: subject.teacher,
-        room: subject.room,
-        memo: subject.memo,
-    }).from(subject).where(eq(subject.special, 0));
+    const subjects = await GetDetailSubjects(db);
 
     return {subjects};
 }) satisfies PageServerLoad;
@@ -42,7 +36,7 @@ export const actions = {
                 short: newSubjectsData.short,
                 teacher: newSubjectsData.teacher,
                 room: newSubjectsData.room,
-                memo: newSubjectsData.memo,
+                memo: newSubjectsData.memo, 
             });
         }else if(type==="Delete") {
             const check = await db.select().from(schedule).where(eq(schedule.subject, newSubjectsData.id)).limit(1);
