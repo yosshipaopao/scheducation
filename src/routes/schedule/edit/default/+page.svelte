@@ -19,7 +19,7 @@
     if(successToast)setTimeout(()=>successToast=false,5000);
 </script>
 
-<Card size="xl" class="mt-4">
+<Card size="xl">
     <div class="w-full">
         <div class="w-full h-12 flex justify-between items-center mb-4">
             <Button on:click={()=>openSubjectModal=true}>科目を追加</Button>

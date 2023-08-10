@@ -4,8 +4,8 @@ import type {Actions, PageServerLoad} from "./$types";
 import {error, redirect} from "@sveltejs/kit";
 import {eq} from "drizzle-orm";
 
-export const load = (async ({locals}: { locals: any }) => {
-    const session = await locals.getSession();
+export const load = (async ({parent}) => {
+    const {session} = await parent();
     if (!session?.user) throw redirect(303, "/signin");
 
     const subjects = await db.select({

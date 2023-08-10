@@ -72,7 +72,7 @@
         </NavUl>
     </Navbar>
 </header>
-<main class="lg:w-[1024px] w-full mx-auto pt-12 min-h-fitScreen">
+<main class="lg:w-[1024px] w-full mx-auto pt-20 min-h-fitScreen">
     <slot/>
 </main>
 <Footer>

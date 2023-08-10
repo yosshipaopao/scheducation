@@ -8,6 +8,9 @@
         ChevronRightSolid
     } from "flowbite-svelte-icons";
     import {goto} from "$app/navigation";
+    import MonthSkeleton from "$lib/components/schedule/MonthSkeleton.svelte";
+    import WeekSkeleton from "$lib/components/schedule/WeekSkeleton.svelte";
+    import DateSkeleton from "$lib/components/schedule/DateSkeleton.svelte";
 
     export let data: PageData;
     $:mode = data.slug.mode;
@@ -30,48 +33,57 @@
 
 </script>
 <svelte:head>
-    <title>{`${mode} : ${year}/${month+(mode==="month"?"":`/${date}`)} | Scheducation`}</title>
+    <title>{`${mode} : ${year}/${month + (mode === "month" ? "" : `/${date}`)} | Scheducation`}</title>
 </svelte:head>
-<Card size="xl" class="mt-4">
-    <div class="w-full">
-        <div class="w-full h-12 flex justify-between items-center mb-4">
-            <ButtonGroup>
-                {#if mode === "week"}
-                    <Button pill class="!p-2" href={changeDate(mode,year,month,date,-7)}>
-                        <ChervonDoubleLeftSolid/>
-                    </Button>
-                {/if}
-                <Button pill class="!p-2" href={changeDate(mode,year,month,date,-1)}>
-                    <ChevronLeftSolid/>
+<Card size="xl">
+    <div class="w-full h-12 flex justify-between items-center mb-4">
+        <ButtonGroup>
+            {#if mode === "week"}
+                <Button pill class="!p-2" href={changeDate(mode,year,month,date,-7)}>
+                    <ChervonDoubleLeftSolid/>
                 </Button>
-            </ButtonGroup>
-            <div class="flex items-center gap-0 sm:gap-2">
-                <p class="text-2xl dark:text-white">{`${year}/${month}` + (mode === 'month' ? '' : `/${date}`)}</p>
-                <div class="w-20 sm:w-24">
-                    <Select size="sm" items={modes} bind:value={mode} on:change={()=>goto(`/schedule/${mode}/${year}/${month}/${date}`)}/>
-                </div>
+            {/if}
+            <Button pill class="!p-2" href={changeDate(mode,year,month,date,-1)}>
+                <ChevronLeftSolid/>
+            </Button>
+        </ButtonGroup>
+        <div class="flex items-center gap-0 sm:gap-2">
+            <p class="text-2xl dark:text-white">{`${year}/${month}` + (mode === 'month' ? '' : `/${date}`)}</p>
+            <div class="w-20 sm:w-24">
+                <Select size="sm" items={modes} bind:value={mode}
+                        on:change={()=>goto(`/schedule/${mode}/${year}/${month}/${date}`)}/>
             </div>
-            <ButtonGroup>
-                <Button pill class="!p-2" href={changeDate(mode,year,month,date,1)}>
-                    <ChevronRightSolid/>
-                </Button>
-                {#if mode === "week"}
-                    <Button pill class="!p-2" href={changeDate(mode,year,month,date,7)}>
-                        <ChervonDoubleRightSolid/>
-                    </Button>
-                {/if}
-            </ButtonGroup>
         </div>
-        <div class="w-full overflow-x-scroll">
-            <div class="w-[960px] grid grid-{mode==='date'?'rows':'cols'}-7 gap-1 sm:gap-2 my-2 ">
+        <ButtonGroup>
+            <Button pill class="!p-2" href={changeDate(mode,year,month,date,1)}>
+                <ChevronRightSolid/>
+            </Button>
+            {#if mode === "week"}
+                <Button pill class="!p-2" href={changeDate(mode,year,month,date,7)}>
+                    <ChervonDoubleRightSolid/>
+                </Button>
+            {/if}
+        </ButtonGroup>
+    </div>
+    <div class="w-full overflow-x-scroll">
+        <div class="w-[960px] grid grid-{mode==='date'?'rows':'cols'}-7 gap-1 sm:gap-2 my-2 ">
+            {#if mode === "month"}
+                {#each days as v}
+                    <Card class="h-8 !p-1 flex justify-center items-center">
+                        <p class="text-lg dark:text-white">{v}</p>
+                    </Card>
+                {/each}
+            {/if}
+            {#await data.streamed.data}
                 {#if mode === "month"}
-                    {#each days as v}
-                        <Card class="h-8 !p-1 flex justify-center items-center">
-                            <p class="text-lg dark:text-white">{v}</p>
-                        </Card>
-                    {/each}
+                    <MonthSkeleton/>
+                {:else if mode === "week"}
+                    <WeekSkeleton/>
+                {:else}
+                    <DateSkeleton/>
                 {/if}
-                {#each data.data as v}
+            {:then value}
+                {#each value as v}
                     {#if mode === "month"}
                         <Card href={`/schedule/date/${v.year}/${v.month}/${v.date}`}
                               class="h-28 !p-4 relative dark:text-white">
@@ -85,10 +97,10 @@
                         <div class="flex flex-col gap-1 sm:gap-2">
                             <Card href={`/schedule/date/${v.year}/${v.month}/${v.date}`}
                                   class="h-8 !p-1 flex justify-center items-center">
-                                <p class="text-lg dark:text-white">{`${v.date}(${days[new Date(v.year,v.month-1,v.date).getDay()]})`}</p>
+                                <p class="text-lg dark:text-white">{`${v.date}(${days[new Date(v.year, v.month - 1, v.date).getDay()]})`}</p>
                             </Card>
                             {#each v.data as w}
-                                <Card class="h-24 dark:text-white">
+                                <Card class="h-24 !p-2 dark:text-white">
                                     {JSON.stringify(w)}
                                 </Card>
                             {/each}
@@ -105,7 +117,10 @@
                         </div>
                     {/if}
                 {/each}
-            </div>
+            {:catch error}
+                <p>{error.message}</p>
+            {/await}
+
         </div>
     </div>
 </Card>

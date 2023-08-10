@@ -91,7 +91,7 @@
         })
     }
 </script>
-<Card size="xl" class="mt-4 flex flex-col items-center gap-2">
+<Card size="xl" class="flex flex-col items-center gap-2">
     {#each subjects as subject}
         <Card size="xl" class="w-full flex flex-row justify-center items-center">
             <div class="flex w-full flex-col">

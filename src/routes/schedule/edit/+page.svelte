@@ -1,8 +1,8 @@
 <script lang="ts">
 
-import {Card} from "flowbite-svelte";
+    import {Button, Card} from "flowbite-svelte";
 </script>
-<div class="w-full grid grid-cols-4 gap-2 mt-4">
+<div class="w-full grid grid-cols-4 gap-2">
     <Card href="/schedule/edit/default">
         Default
     </Card>
@@ -10,3 +10,8 @@ import {Card} from "flowbite-svelte";
         Subject
     </Card>
 </div>
+<Card size="xl">
+    <Button color="primary" size="lg" href="/schedule/edit/date/2023/8/10">
+        Default
+    </Button>
+</Card>
