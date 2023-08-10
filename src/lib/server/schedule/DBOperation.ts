@@ -19,32 +19,29 @@ export interface ScheduleData {
     memo: string | null
 }
 
-export const GetSheduleByDate = async (DB: typeof db, date: Date, subjects: Map<string, any> | null = null)=> {
-    const year = date.getFullYear();
-    const month = date.getMonth() + 1;
-    const day = date.getDate();
-    const base = scheduleScript.convertDate(year, month, day);
+export type SubjectsMap = Map<string, SubjectData>
+
+export const GetSubjectsFromSubjectsId = async (DB: typeof db, subjectsId: Set<string>): Promise<SubjectsMap> => {
+    const subjects: SubjectsMap = new Map();
+    const subjectsData = await DB.select().from(subject).where(inArray(subject.id, Array.from(subjectsId))) as SubjectData[];
+    for (const sub of subjectsData) {
+        subjects.set(sub.id as string, sub);
+    }
+    return subjects;
+}
+
+export const GetScheduleByDate = async (DB: typeof db, date: Date | number, subjectsArg: SubjectsMap | null = null): Promise<ScheduleData[]> => {
+    //DBのdateはnumber型
+    const base = typeof date == "number" ? date : scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+    //DBから取得
     const scheduleData = await DB.select().from(schedule).where(eq(schedule.date, base)).orderBy(schedule.time);
-    if (subjects === null) {
-        subjects = new Map<string, any>();
-        const subjectsId = new Set<string>();
-        for (const schedule of scheduleData) {
-            subjectsId.add(schedule.subject as string);
-        }
-        const subjectsData = await DB.select().from(subject).where(inArray(subject.id, Array.from(subjectsId)));
-        for (const sub of subjectsData) {
-            subjects.set(sub.id as string, sub);
-        }
-    }
-    const data: ScheduleData[] = [];
-    for (const schedule of scheduleData) {
-        const time = schedule.time as number;
-        data.push({
-            time: time,
-            subject: subjects.get(schedule.subject as string),
-            belongings: schedule.belongings as string,
-            memo: schedule.memo as string
-        });
-    }
-    return data;
+    //subjectsArgがnullの場合はDBから取得する
+    const subjects = subjectsArg ?? await GetSubjectsFromSubjectsId(DB, new Set<string>(scheduleData.map((schedule) => schedule.subject as string)));
+    //scheduleDataをScheduleDataに変換
+    return scheduleData.map((schedule) => ({
+        time: schedule.time,
+        subject: subjects.get(schedule.subject as string) as SubjectData,
+        belongings: schedule.belongings as string,
+        memo: schedule.memo as string
+    }) as ScheduleData)
 }
