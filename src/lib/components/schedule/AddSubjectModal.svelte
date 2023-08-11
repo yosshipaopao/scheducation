@@ -1,20 +1,21 @@
 <script lang="ts">
     import {Modal, Button, Select, Label, Input} from "flowbite-svelte";
+
     export let open = false;
     export let subjects;
-    export let subjectsSelect : { value: string, name: string }[];
+    export let subjectsSelect: { value: string, name: string }[];
 
-    const subjectForm={
+    let subjectForm = {
         short: "",
         name: "",
         teacher: "",
         room: "",
         memo: ""
     }
-    const Submit= () => {
+    const Submit = () => {
         const id = crypto.randomUUID();
         subjectsSelect.push({value: id, name: subjectForm.name});
-        subjectsSelect=subjectsSelect;
+        subjectsSelect = subjectsSelect;
         subjects.push({
             id: id,
             short: subjectForm.short,
@@ -23,7 +24,14 @@
             room: subjectForm.room,
             memo: subjectForm.memo
         });
-        subjects=subjects;
+        subjectForm = {
+            short: "",
+            name: "",
+            teacher: "",
+            room: "",
+            memo: ""
+        }
+        subjects = subjects;
         open = false;
     }
 </script>

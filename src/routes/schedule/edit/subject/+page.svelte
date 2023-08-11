@@ -166,11 +166,11 @@
         <Button color="alternative" disabled={running} on:click={()=>newSubjectModal=false}>Close</Button>
     </svelte:fragment>
 </Modal>
-<Toast position="bottom-right" transition={slide} bind:open={errorToast.show} color="red">
+<Toast class="fixed" position="bottom-right" transition={slide} bind:open={errorToast.show} color="red">
     <p slot="icon">!</p>
     {errorToast.msg}
 </Toast>
-<Toast position="bottom-right" transition={slide} bind:open={successToast.show} color="blue">
+<Toast class="fixed" position="bottom-right" transition={slide} bind:open={successToast.show} color="blue">
     <CheckSolid slot="icon"/>
     {successToast.msg}
 </Toast>
