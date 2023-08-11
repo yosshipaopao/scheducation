@@ -8,11 +8,7 @@
     import {slide} from "svelte/transition";
 
     export let data: PageData;
-    let schedule = data.schedule.map((v) => v.map((w) => ({
-        date: w.date,
-        time: w.time,
-        subject: w.subject.id,
-    })));
+    let schedule = data.schedule;
     let subjects = data.subjects;
     let subjectsSelect: { name: string, value: string }[] = subjects.map((v) => ({name: v.name, value: v.id}));
     const days = ["日", "月", "火", "水", "木", "金", "土"];

@@ -2,7 +2,7 @@
     import {Modal, Button, Select, Label, Input} from "flowbite-svelte";
 
     export let open = false;
-    export let subjects;
+    export let subjects:any[];
     export let subjectsSelect: { value: string, name: string }[];
 
     let subjectForm = {
@@ -41,12 +41,12 @@
     <form on:submit|preventDefault={Submit}>
         <div class="grid gap-6 mb-6 md:grid-cols-2">
             <div>
-                <Label for="shortname" class="mb-2">Subject Name(short)</Label>
-                <Input type="text" id="shortname" placeholder="教科名（短）" required bind:value={subjectForm.short}/>
-            </div>
-            <div>
                 <Label for="fullname" class="mb-2">Subject Name(full)</Label>
                 <Input type="text" id="fullname" placeholder="教科名（長）" required bind:value={subjectForm.name}/>
+            </div>
+            <div>
+                <Label for="shortname" class="mb-2">Subject Name(short)</Label>
+                <Input type="text" id="shortname" placeholder="教科名（短）" required bind:value={subjectForm.short}/>
             </div>
             <div>
                 <Label for="teacher" class="mb-2">Teacher</Label>
