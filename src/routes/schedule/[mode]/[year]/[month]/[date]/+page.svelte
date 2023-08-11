@@ -86,68 +86,70 @@
             {/if}
         </ButtonGroup>
     </div>
-    <div class="w-[960px] grid grid-{mode==='date'?'rows':'cols'}-7 gap-1 sm:gap-2 my-2 ">
-        {#if mode === "month"}
-            {#each days as v}
-                <Card class="h-8 !p-1 flex justify-center items-center">
-                    <p class="text-lg dark:text-white">{v}</p>
-                </Card>
-            {/each}
-        {/if}
-        {#await data.streamed.data}
+    <div class="overflow-x-auto">
+        <div class="w-[960px] grid grid-{mode==='date'?'rows':'cols'}-7 gap-1 sm:gap-2 mb-2">
             {#if mode === "month"}
-                <MonthSkeleton/>
-            {:else if mode === "week"}
-                <WeekSkeleton/>
-            {:else}
-                <DateSkeleton/>
-            {/if}
-        {:then value}
-            {#if mode === "month"}
-                {#each value as v}
-                    <Card href={`/schedule/date/${getDateInfo(v.date).year}/${getDateInfo(v.date).month}/${getDateInfo(v.date).date}`}
-                          class="h-28 !p-4 relative dark:text-white flex flex-col items-center justify-center">
-                        {#if v.special !== 0}
-                            <Indicator color="red" border size="xl" placement="top-right"/>
-                        {/if}
-                        <p class="text-2xl">{`${getDateInfo(v.date).month}/${getDateInfo(v.date).date}(${days[getDateInfo(v.date).day]})`}</p>
-                        <p class="text-2xl">{v.info.length ? v.info : "通常"}</p>
+                {#each days as v}
+                    <Card class="h-8 !p-1 flex justify-center items-center">
+                        <p class="text-lg dark:text-white">{v}</p>
                     </Card>
                 {/each}
-            {:else if mode === "week"}
-                {#each value as v,i}
-                    <div class="flex flex-col gap-1 sm:gap-2">
-                        <Card class="h-8 !p-1 flex justify-center items-center"
-                            href={`/schedule/date/${getDateInfo(i - 3).year}/${getDateInfo(i - 3).month}/${getDateInfo(i - 3).date}`}
-                        >
-                            <p class="text-lg dark:text-white">{`${getDateInfo(i - 3).month}/${getDateInfo(i - 3).date}(${days[getDateInfo(i - 3).day]})`}</p>
-                        </Card>
-                        {#each v as w}
-                            <Card class="h-24 !p-2 dark:text-white relative flex items-center justify-center">
-                                {#if w.subject.special !== 0}
-                                    <Indicator color="red" border size="xl" placement="top-right"/>
-                                {/if}
-                                <p class="text-2xl">{w.time+1}</p>
-                                <p class="text-2xl">{w.subject.short}</p>
-                            </Card>
-                        {/each}
-                    </div>
-                {/each}
-            {:else}
-                {#each value as v}
-                    <div class="flex gap-1 sm:gap-2">
-                        <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
-                            <p class="text-2xl dark:text-white">{v.time + 1}</p>
-                            <p class="text-2xl dark:text-white">{v.subject.short}</p>
-                        </Card>
-                        <Card size="xl" class="grow">
-                            <p>{JSON.stringify(v)}</p>
-                        </Card>
-                    </div>
-                {/each}
             {/if}
-        {:catch error}
-            <p>{error.message}</p>
-        {/await}
+            {#await data.streamed.data}
+                {#if mode === "month"}
+                    <MonthSkeleton/>
+                {:else if mode === "week"}
+                    <WeekSkeleton/>
+                {:else}
+                    <DateSkeleton/>
+                {/if}
+            {:then value}
+                {#if mode === "month"}
+                    {#each value as v}
+                        <Card href={`/schedule/date/${getDateInfo(v.date).year}/${getDateInfo(v.date).month}/${getDateInfo(v.date).date}`}
+                              class="h-28 !p-4 relative dark:text-white flex flex-col items-center justify-center">
+                            {#if v.special !== 0}
+                                <Indicator color="red" border size="xl" placement="top-right"/>
+                            {/if}
+                            <p class="text-2xl">{`${getDateInfo(v.date).month}/${getDateInfo(v.date).date}(${days[getDateInfo(v.date).day]})`}</p>
+                            <p class="text-2xl">{v.info.length ? v.info : "通常"}</p>
+                        </Card>
+                    {/each}
+                {:else if mode === "week"}
+                    {#each value as v,i}
+                        <div class="flex flex-col gap-1 sm:gap-2">
+                            <Card class="h-8 !p-1 flex justify-center items-center"
+                                  href={`/schedule/date/${getDateInfo(i - 3).year}/${getDateInfo(i - 3).month}/${getDateInfo(i - 3).date}`}
+                            >
+                                <p class="text-lg dark:text-white">{`${getDateInfo(i - 3).month}/${getDateInfo(i - 3).date}(${days[getDateInfo(i - 3).day]})`}</p>
+                            </Card>
+                            {#each v as w}
+                                <Card class="h-24 !p-2 dark:text-white relative flex items-center justify-center">
+                                    {#if w.subject.special !== 0}
+                                        <Indicator color="red" border size="xl" placement="top-right"/>
+                                    {/if}
+                                    <p class="text-2xl">{w.time + 1}</p>
+                                    <p class="text-2xl">{w.subject.short}</p>
+                                </Card>
+                            {/each}
+                        </div>
+                    {/each}
+                {:else}
+                    {#each value as v}
+                        <div class="flex gap-1 sm:gap-2">
+                            <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
+                                <p class="text-2xl dark:text-white">{v.time + 1}</p>
+                                <p class="text-2xl dark:text-white">{v.subject.short}</p>
+                            </Card>
+                            <Card size="xl" class="grow">
+                                <p>{JSON.stringify(v)}</p>
+                            </Card>
+                        </div>
+                    {/each}
+                {/if}
+            {:catch error}
+                <p>{error.message}</p>
+            {/await}
+        </div>
     </div>
 </Card>

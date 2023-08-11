@@ -1,9 +1,12 @@
 <script lang="ts">
     import type {PageData} from "./$types"
-    import {Button, ButtonGroup, Card, Checkbox, Select, Toast, Toggle} from "flowbite-svelte";
+    import {Button, ButtonGroup, Card, Input, Select, Toast, Toggle} from "flowbite-svelte";
     import ChevronRightSolid from "flowbite-svelte-icons/ChevronRightSolid.svelte";
     import ChevronLeftSolid from "flowbite-svelte-icons/ChevronLeftSolid.svelte";
     import AddSubjectModal from "$lib/components/schedule/AddSubjectModal.svelte";
+    import type {DateSchedule} from "$lib/server/schedule/Data";
+    import {slide} from "svelte/transition";
+    import CheckCircleOutline from "flowbite-svelte-icons/CheckCircleOutline.svelte";
 
     export let data: PageData;
     $:year = data.slug.year;
@@ -20,19 +23,64 @@
         name: string,
         value: string
     }[] = specialSubjects.map((v) => ({name: v.name, value: v.id}));
-    let schedule = data.data.map(v => ({
-        time: v.time,
-        subject: v.subject.id,
-        belongings: v.belongings,
-        memo: v.memo,
-        special: v.special !== 0
-    }));
+    let schedule: any[] = [];
+    let defaultSchedule: string;
+    const updateSchedule = (val: DateSchedule) => {
+        schedule = val.map(v => ({
+            time: v.time,
+            subject: v.subject.id,
+            belongings: v.belongings,
+            memo: v.memo,
+            special: v.special !== 0,
+            unique:false
+        }));
+        defaultSchedule = JSON.stringify(schedule);
+    };
+    $:updateSchedule(data.data)
     const changeDate = (year: number, month: number, date: number, width: number) => {
         let now = new Date(year, month - 1, date);
         now.setDate(now.getDate() + width);
         return `/schedule/edit/date/${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
     };
     let openSubjectModal = false;
+    const post = () => {
+        const formData = new FormData();
+        formData.append("data", JSON.stringify(schedule));
+        formData.append("special", JSON.stringify(specialSubjects));
+        fetch("", {
+            method: "POST",
+            body: formData,
+        }).then((res) => {
+            console.log(res);
+            if (res.ok) {
+                successToast.show = true;
+                successToast.msg = "保存しました";
+                setTimeout(() => successToast.show = false, 3000);
+            } else {
+                errorToast.show = true;
+                errorToast.msg = `保存に失敗しました。\n${res.status} ${res.statusText}`;
+                setTimeout(() => errorToast.show = false, 3000);
+            }
+        }).catch(() => {
+            errorToast.show = true;
+            errorToast.msg = "保存に失敗しました";
+            setTimeout(() => errorToast.show = false, 3000);
+        });
+    }
+    let successToast: {
+        show: boolean,
+        msg: string
+    } = {
+        show: false,
+        msg: ""
+    };
+    let errorToast: {
+        show: boolean,
+        msg: string
+    } = {
+        show: false,
+        msg: ""
+    };
 </script>
 <Card size="xl">
     <div class="w-full h-12 flex justify-between items-center mb-4">
@@ -46,26 +94,62 @@
         <Button pill class="!p-2" href={changeDate(year,month,date,1)}>
             <ChevronRightSolid/>
         </Button>
-        <Button>Save</Button>
+        <ButtonGroup>
+            <Button on:click={()=>{schedule = JSON.parse(defaultSchedule);successToast={show:true,msg:"リセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
+                Reset
+            </Button>
+            <Button on:click={post}>Save</Button>
+        </ButtonGroup>
     </div>
-    <div class="w-full h-fit flex flex-col gap-2">
-        {#each schedule as v}
-            <div class="flex gap-1 sm:gap-2">
-                <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
-                    <p class="text-2xl dark:text-white">{v.time + 1}</p>
-                </Card>
-                <Card size="xl" class="grow flex flex-row">
-                    <Toggle bind:checked={v.special}>特別</Toggle>
-                    <div class="w-full flex flex-row gap-2">
-                        <Select defaultClass='text-gray-900 bg-gray-50 border border-gray-300 rounded-lg focus:ring-primary-500 focus:border-primary-500 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-primary-500 dark:focus:border-primary-500 {v.special?"w-24":"w-full"} transition-all' bind:value={v.subject} items={v.special?specialSubjectsSelect:defaultSubjectsSelect}/>
+    <div class="overflow-x-auto">
+        <div class="w-[960px] h-fit flex flex-col gap-2 mb-2">
+            {#each schedule as v}
+                <div class="flex gap-1 sm:gap-2">
+                    <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
+                        <p class="text-2xl dark:text-white">{v.time + 1}</p>
+                    </Card>
+                    <Card size="xl"
+                          class="grow flex flex-row items-center !p-2 {v.special?'h-48':'h-24'} transition-all">
+                        <div class="flex {v.special?'flex-col mr-4 gap-4':'flex-row'}">
+                            <Toggle bind:checked={v.special} >特別</Toggle>
+                            {#if v.special}
+                                <Toggle bind:checked={v.unique} on:change={()=>v.subject=""}>特別教科</Toggle>
+                                <Select
+                                        bind:value={v.subject}
+                                        items={v.unique?specialSubjectsSelect:defaultSubjectsSelect}/>
+                            {/if}
+                        </div>
                         {#if v.special}
-                            <div class="w-full bg-gray-500"/>
+                            <div class="w-full h-full grid grid-rows-2 gap-2">
+                                <div class="flex flex-col gap-2">
+                                    <p class="text-gray-50">持ち物</p>
+                                    <Input bind:value={v.belongings} class="w-full"/>
+                                </div>
+                                <div class="flex flex-col gap-2">
+                                    <p class="text-gray-50">メモ</p>
+                                    <Input bind:value={v.memo} class="w-full"/>
+                                </div>
+                            </div>
+                        {:else }
+                            <div class="w-full">
+                                <p>{defaultSubjectsSelect.find(w=>w.value===v.subject)?.name??"未設定"}</p>
+                            </div>
                         {/if}
-                    </div>
-                </Card>
-            </div>
-        {/each}
+                    </Card>
+                </div>
+            {/each}
+        </div>
     </div>
 </Card>
 <AddSubjectModal bind:open={openSubjectModal} bind:subjects={specialSubjects}
                  bind:subjectsSelect={specialSubjectsSelect}/>
+<div class="fixed w-72 h-auto bottom-6 right-6 pointer-events-none gap-4 flex flex-col">
+    <Toast transition={slide} bind:open={successToast.show} color="blue">
+        <CheckCircleOutline slot="icon"/>
+        {successToast.msg}
+    </Toast>
+    <Toast transition={slide} bind:open={errorToast.show} color="red">
+        <p slot="icon">!</p>
+        <p>{errorToast.msg}</p>
+    </Toast>
+</div>
