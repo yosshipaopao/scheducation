@@ -4,7 +4,6 @@
     import ChevronRightSolid from "flowbite-svelte-icons/ChevronRightSolid.svelte";
     import ChevronLeftSolid from "flowbite-svelte-icons/ChevronLeftSolid.svelte";
     import AddSubjectModal from "$lib/components/schedule/AddSubjectModal.svelte";
-    import type {DateSchedule} from "$lib/server/schedule/Data";
     import {slide} from "svelte/transition";
     import CheckCircleOutline from "flowbite-svelte-icons/CheckCircleOutline.svelte";
 
@@ -12,7 +11,7 @@
     $:year = data.slug.year;
     $:month = data.slug.month;
     $:date = data.slug.date;
-
+    //subject関係
     let defaultSubjects = data.defaultSubjects;
     let defaultSubjectsSelect: {
         name: string,
@@ -23,26 +22,38 @@
         name: string,
         value: string
     }[] = specialSubjects.map((v) => ({name: v.name, value: v.id}));
+    //schedule関係
     let schedule: any[] = [];
-    let defaultSchedule: string;
-    const updateSchedule = (val: DateSchedule) => {
-        schedule = val.map(v => ({
-            time: v.time,
-            subject: v.subject.id,
-            belongings: v.belongings,
-            memo: v.memo,
+    let defaultSchedule: typeof data.defaultSchedule = [];
+    let specialSchedule: typeof data.specialSchedule = [];
+    let beforeSchedule: string;
+    //わけないとwatchされてると思われて更新できてない
+    const updateSchedule = (def: typeof defaultSchedule, spe: typeof specialSchedule) => {
+        const tmp = def.map(v => ({...v,}));
+        for (const s of spe) tmp[s.time] = {...s};
+        schedule = tmp.map(v => ({
+            ...v,
             special: v.special !== 0,
-            unique:false
+            unique: v.special === 2,
         }));
-        defaultSchedule = JSON.stringify(schedule);
+        defaultSchedule = def;
+        specialSchedule = spe;
+        beforeSchedule = JSON.stringify(schedule);
     };
-    $:updateSchedule(data.data)
-    const changeDate = (year: number, month: number, date: number, width: number) => {
-        let now = new Date(year, month - 1, date);
-        now.setDate(now.getDate() + width);
-        return `/schedule/edit/date/${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
-    };
+    $:updateSchedule(data.defaultSchedule, data.specialSchedule);
     let openSubjectModal = false;
+    interface MsgToast {
+        show: boolean,
+        msg: string
+    }
+    let successToast: MsgToast= {
+        show: false,
+        msg: ""
+    };
+    let errorToast: MsgToast = {
+        show: false,
+        msg: ""
+    };
     const post = () => {
         const formData = new FormData();
         formData.append("data", JSON.stringify(schedule));
@@ -67,19 +78,10 @@
             setTimeout(() => errorToast.show = false, 3000);
         });
     }
-    let successToast: {
-        show: boolean,
-        msg: string
-    } = {
-        show: false,
-        msg: ""
-    };
-    let errorToast: {
-        show: boolean,
-        msg: string
-    } = {
-        show: false,
-        msg: ""
+    const changeDate = (year: number, month: number, date: number, width: number) => {
+        let now = new Date(year, month - 1, date);
+        now.setDate(now.getDate() + width);
+        return `/schedule/edit/date/${now.getFullYear()}/${now.getMonth() + 1}/${now.getDate()}`;
     };
 </script>
 <Card size="xl">
@@ -95,7 +97,7 @@
             <ChevronRightSolid/>
         </Button>
         <ButtonGroup>
-            <Button on:click={()=>{schedule = JSON.parse(defaultSchedule);successToast={show:true,msg:"リセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
+            <Button on:click={()=>{schedule = JSON.parse(beforeSchedule);successToast={show:true,msg:"リセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
                 Reset
             </Button>
             <Button on:click={post}>Save</Button>
@@ -111,7 +113,7 @@
                     <Card size="xl"
                           class="grow flex flex-row items-center !p-2 {v.special?'h-48':'h-24'} transition-all">
                         <div class="flex {v.special?'flex-col mr-4 gap-4':'flex-row'}">
-                            <Toggle bind:checked={v.special} >特別</Toggle>
+                            <Toggle bind:checked={v.special}>特別</Toggle>
                             {#if v.special}
                                 <Toggle bind:checked={v.unique} on:change={()=>v.subject=""}>特別教科</Toggle>
                                 <Select
@@ -132,7 +134,7 @@
                             </div>
                         {:else }
                             <div class="w-full">
-                                <p>{defaultSubjectsSelect.find(w=>w.value===v.subject)?.name??"未設定"}</p>
+                                <p>{defaultSubjectsSelect.find(w => w.value === v.subject)?.name ?? specialSubjectsSelect.find(w => w.value === v.subject)?.name ?? "未設定"}</p>
                             </div>
                         {/if}
                     </Card>

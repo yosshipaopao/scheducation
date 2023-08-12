@@ -5,18 +5,18 @@ export const schedule = pgTable("schedule", {
     date: integer("date").notNull(),
     time: integer("time").notNull(),
     subject: varchar("subject").notNull(),
-    belongings: varchar("belongings").default(""),
+    belongings: varchar("belongings").default("").notNull(),
     special: integer("special").default(0).notNull(),
-    memo: text("memo").default(""),
+    memo: text("memo").default("").notNull(),
 });
 
 export const subject = pgTable("subject", {
     count: serial("count").primaryKey(),
-    id: varchar("id"),
-    name: varchar("name"),
-    short: varchar("short"),
-    teacher: varchar("teacher"),
-    room: varchar("room"),
-    memo: text("memo"),
-    special: integer("special").default(0)
+    id: varchar("id").notNull(),
+    name: varchar("name").notNull().default(""),
+    short: varchar("short").notNull().default(""),
+    teacher: varchar("teacher").notNull().default(""),
+    room: varchar("room").notNull().default(""),
+    memo: text("memo").notNull().default(""),
+    special: integer("special").default(0).notNull()
 });
