@@ -24,11 +24,11 @@
     }[] = specialSubjects.map((v) => ({name: v.name, value: v.id}));
     //schedule関係
     let schedule: any[] = [];
-    let defaultSchedule: typeof data.defaultSchedule = [];
-    let specialSchedule: typeof data.specialSchedule = [];
+    let defaultSchedule: string[] = [];
+    let specialSchedule: string[] = [];
     let beforeSchedule: string;
     //わけないとwatchされてると思われて更新できてない
-    const updateSchedule = (def: typeof defaultSchedule, spe: typeof specialSchedule) => {
+    const updateSchedule = (def: typeof data.defaultSchedule, spe: typeof data.specialSchedule) => {
         const tmp = def.map(v => ({...v,}));
         for (const s of spe) tmp[s.time] = {...s};
         schedule = tmp.map(v => ({
@@ -36,8 +36,8 @@
             special: v.special !== 0,
             unique: v.special === 2,
         }));
-        defaultSchedule = def;
-        specialSchedule = spe;
+        defaultSchedule = def.map(v => JSON.stringify({...v,special:false,unique:false}))
+        specialSchedule = spe.map(v => JSON.stringify({...v,special:true,unique:v.special===2}))
         beforeSchedule = JSON.stringify(schedule);
     };
     $:updateSchedule(data.defaultSchedule, data.specialSchedule);
@@ -97,6 +97,9 @@
             <ChevronRightSolid/>
         </Button>
         <ButtonGroup>
+            <Button on:click={()=>{schedule=schedule.map((v,i)=>JSON.parse(defaultSchedule[i]));successToast={show:true,msg:"通常通りにセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
+                Default
+            </Button>
             <Button on:click={()=>{schedule = JSON.parse(beforeSchedule);successToast={show:true,msg:"リセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
                 Reset
             </Button>
@@ -105,7 +108,7 @@
     </div>
     <div class="overflow-x-auto">
         <div class="w-[960px] h-fit flex flex-col gap-2 mb-2">
-            {#each schedule as v}
+            {#each schedule as v,i}
                 <div class="flex gap-1 sm:gap-2">
                     <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
                         <p class="text-2xl dark:text-white">{v.time + 1}</p>
@@ -113,7 +116,7 @@
                     <Card size="xl"
                           class="grow flex flex-row items-center !p-2 {v.special?'h-48':'h-24'} transition-all">
                         <div class="flex {v.special?'flex-col mr-4 gap-4':'flex-row'}">
-                            <Toggle bind:checked={v.special}>特別</Toggle>
+                            <Toggle bind:checked={v.special} on:change={()=>{v=v.special?JSON.parse(specialSchedule[i]):JSON.parse(defaultSchedule[i])}}>特別</Toggle>
                             {#if v.special}
                                 <Toggle bind:checked={v.unique} on:change={()=>v.subject=""}>特別教科</Toggle>
                                 <Select
