@@ -23,10 +23,10 @@ export interface DateTimeSchedule {
     info: string
 }
 
-type MonthSchedule = MonthDateSchedule[];
-type WeekDateSchedule = WeekTimeSchedule[];
-type WeekSchedule = WeekDateSchedule[];
-type DateSchedule = DateTimeSchedule[];
+export type MonthSchedule = MonthDateSchedule[];
+export type WeekDateSchedule = WeekTimeSchedule[];
+export type WeekSchedule = WeekDateSchedule[];
+export type DateSchedule = DateTimeSchedule[];
 export const GetMonthSchedule = async (DB: typeof db, Arg: { year: number, month: number }) => {
     const {year, month} = Arg;
     const startDate = new Date(year, month - 1, 1);
@@ -35,7 +35,7 @@ export const GetMonthSchedule = async (DB: typeof db, Arg: { year: number, month
     endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
     const startInt = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
     const endInt = endDate.getFullYear() * 10000 + (endDate.getMonth() + 1) * 100 + endDate.getDate();
-    const total = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+    const total = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     /*動いてなかったらこれを使う
     const raw = await DB.select({
         date: DateEntry.date,
@@ -56,7 +56,8 @@ export const GetMonthSchedule = async (DB: typeof db, Arg: { year: number, month
     const result: MonthSchedule = [];
     for (let i = 0; i < total; i++) {
         const n = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
-        result.push(map.get(n) ?? {date: n, holiday: false, special: false, info: ""});
+        const d = startDate.getDay();
+        result.push(map.get(n) ?? map.get(d) ?? {date: n, holiday: true, special: false, info: ""});
         startDate.setDate(startDate.getDate() + 1);
     }
     return result;
@@ -80,13 +81,8 @@ export const GetWeekSchedule = async (DB: typeof db, Arg: { year: number, month:
     )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.date, TimeTable.time);
     const map = new Map<number, WeekDateSchedule>();
     raw.forEach(v => {
-        if (v.date <= 6) {
-            if (!map.has(v.date)) map.set(v.date, []);
-            map.get(v.date)?.push({...v, name: v.name ?? "不明"});
-        } else {
-            if (!map.has(v.date)) map.set(v.date, []);
-            map.get(v.date)?.push({...v, name: v.name ?? "不明"});
-        }
+        if (!map.has(v.date)) map.set(v.date, []);
+        map.get(v.date)?.push({...v, name: v.name ?? "不明"});
     });
     const result: WeekSchedule = [];
     for (let i = 0; i < 7; i++) {
@@ -122,7 +118,7 @@ export const GetDateSchedule = async (DB: typeof db, Arg: { year: number, month:
         eq(TimeTable.date, day)
     )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.time);
     const defaultMap = new Map<number, DateTimeSchedule>();
-    const specialMap = new Map<number,DateTimeSchedule>();
+    const specialMap = new Map<number, DateTimeSchedule>();
     let maxTime = 0;
     raw.forEach(v => {
         const data = {
