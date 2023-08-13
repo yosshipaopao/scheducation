@@ -1,6 +1,6 @@
-import { pgTable, serial, text, varchar,integer } from "drizzle-orm/pg-core";
+import {pgTable, serial, text, varchar, integer} from "drizzle-orm/pg-core";
 
-export const schedule = pgTable("schedule", {
+const scheduleColumns = {
     id: serial("id").primaryKey(),
     date: integer("date").notNull(),
     time: integer("time").notNull(),
@@ -8,7 +8,12 @@ export const schedule = pgTable("schedule", {
     belongings: varchar("belongings").default("").notNull(),
     special: integer("special").default(0).notNull(),
     memo: text("memo").default("").notNull(),
-});
+}
+
+export const schedule = pgTable("schedule", scheduleColumns);
+
+export const deleted = pgTable("deleted", scheduleColumns)
+
 
 export const subject = pgTable("subject", {
     count: serial("count").primaryKey(),

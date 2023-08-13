@@ -18,16 +18,22 @@ export const load: PageServerLoad = async ({parent, params}) => {
     finalDate.setDate(finalDate.getDate() + 6 - finalDate.getDay());
     const startInt = scheduleScript.convertDate(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
     const finalInt = scheduleScript.convertDate(finalDate.getFullYear(), finalDate.getMonth() + 1, finalDate.getDate());
-    const data = await db.selectDistinct({
+    const data = new Set((await db.selectDistinct({
         date: schedule.date,
-    }).from(schedule).where(or(and(lte(schedule.date, finalInt), gte(schedule.date, startInt)),lte(schedule.date,6))).orderBy(schedule.date);
-
+    }).from(schedule).where(or(and(lte(schedule.date, finalInt), gte(schedule.date, startInt)),lte(schedule.date,6))).orderBy(schedule.date)).map(v => v.date));
+    const isHolidays :boolean[] = [];
+    const date= new Date(startDate);
+    for(let i=0;i<Math.floor((finalDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;i++){
+        const int = scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+        const day = date.getDay();
+        isHolidays.push(!(data.has(day)||data.has(int)));
+        date.setDate(date.getDate() + 1);
+    }
     return{
         slug: {
             year: year,
             month: month
         },
-        totalDate: Math.floor((finalDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1,
-        data: data
+        data: isHolidays
     }
 }

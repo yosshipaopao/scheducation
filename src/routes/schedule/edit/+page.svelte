@@ -47,25 +47,7 @@
         <ButtonGroup>
             <NumberInput bind:value={year}/>
             <NumberInput bind:value={month}/>
+            <Button href="/schedule/edit/month/{year}/{month}">EDIT</Button>
         </ButtonGroup>
-    </div>
-    <div class="overflow-x-auto">
-        <div class="w-[960px] h-fit grid grid-cols-7 gap-2 mb-2">
-            {#each days as day}
-                <Card class="h-8 !p-2 relative dark:text-white flex flex-col items-center justify-center">
-                    <p>{day}</p>
-                </Card>
-            {/each}
-            {#each dates as v}
-                <Card class="h-28 !p-0 relative dark:text-white flex flex-col items-center justify-center gap-2">
-                    <a class="w-full h-full flex items-center justify-center" href={`/schedule/edit/date/${v.getFullYear()}/${v.getMonth()+1}/${v.getDate()}`}>
-                        <p class="text-2xl">{`${v.getMonth() + 1}/${v.getDate()}`}</p>
-                    </a>
-                    <div class="w-full h-[75%] flex items-center justify-center">
-                        <Toggle>Holiday</Toggle>
-                    </div>
-                </Card>
-            {/each}
-        </div>
     </div>
 </Card>

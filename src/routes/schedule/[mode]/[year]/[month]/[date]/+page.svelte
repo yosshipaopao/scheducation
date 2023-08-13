@@ -113,6 +113,7 @@
                             {/if}
                             <p class="text-2xl">{`${getDateInfo(v.date).month}/${getDateInfo(v.date).date}(${days[getDateInfo(v.date).day]})`}</p>
                             <p class="text-2xl">{v.info.length ? v.info : "通常"}</p>
+                            <p>{v.holiday}</p>
                         </Card>
                     {/each}
                 {:else if mode === "week"}

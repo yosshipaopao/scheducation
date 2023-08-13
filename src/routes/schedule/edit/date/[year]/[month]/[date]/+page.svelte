@@ -36,17 +36,19 @@
             special: v.special !== 0,
             unique: v.special === 2,
         }));
-        defaultSchedule = def.map(v => JSON.stringify({...v,special:false,unique:false}))
-        specialSchedule = spe.map(v => JSON.stringify({...v,special:true,unique:v.special===2}))
+        defaultSchedule = def.map(v => JSON.stringify({...v, special: false, unique: false}))
+        specialSchedule = spe.map(v => JSON.stringify({...v, special: true, unique: v.special === 2}))
         beforeSchedule = JSON.stringify(schedule);
     };
     $:updateSchedule(data.defaultSchedule, data.specialSchedule);
     let openSubjectModal = false;
+
     interface MsgToast {
         show: boolean,
         msg: string
     }
-    let successToast: MsgToast= {
+
+    let successToast: MsgToast = {
         show: false,
         msg: ""
     };
@@ -97,7 +99,10 @@
             <ChevronRightSolid/>
         </Button>
         <ButtonGroup>
-            <Button on:click={()=>{schedule=schedule.map((v,i)=>JSON.parse(defaultSchedule[i]));successToast={show:true,msg:"通常通りにセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
+            <Button on:click={()=>schedule=[]}>
+                Holiday
+            </Button>
+            <Button on:click={()=>{schedule=schedule.map((v,i)=>JSON.parse(defaultSchedule[i]??`{"time":${i}}`));successToast={show:true,msg:"通常通りにセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
                 Default
             </Button>
             <Button on:click={()=>{schedule = JSON.parse(beforeSchedule);successToast={show:true,msg:"リセットしました。"};setTimeout(()=>successToast.show=false,3000)}}>
@@ -116,7 +121,10 @@
                     <Card size="xl"
                           class="grow flex flex-row items-center !p-2 {v.special?'h-48':'h-24'} transition-all">
                         <div class="flex {v.special?'flex-col mr-4 gap-4':'flex-row'}">
-                            <Toggle bind:checked={v.special} on:change={()=>{v=v.special?JSON.parse(specialSchedule[i]):JSON.parse(defaultSchedule[i])}}>特別</Toggle>
+                            <Toggle bind:checked={v.special}
+                                    on:change={()=>{v=v.special?JSON.parse(specialSchedule[i]):JSON.parse(defaultSchedule[i])}}>
+                                特別
+                            </Toggle>
                             {#if v.special}
                                 <Toggle bind:checked={v.unique} on:change={()=>v.subject=""}>特別教科</Toggle>
                                 <Select
@@ -140,9 +148,13 @@
                                 <p>{defaultSubjectsSelect.find(w => w.value === v.subject)?.name ?? specialSubjectsSelect.find(w => w.value === v.subject)?.name ?? "未設定"}</p>
                             </div>
                         {/if}
+                        {#if i === schedule.length - 1}
+                            <Button on:click={()=>schedule.length-=1}>del</Button>
+                        {/if}
                     </Card>
                 </div>
             {/each}
+            <Button on:click={()=>{schedule.push(JSON.parse(beforeSchedule)[schedule.length]??{time:schedule.length});schedule=schedule}}>追加</Button>
         </div>
     </div>
 </Card>

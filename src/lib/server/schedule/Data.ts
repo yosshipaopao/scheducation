@@ -1,7 +1,7 @@
 import scheduleScript from "$lib/schedule";
 import type {db} from "$lib/server/db";
 import {schedule, subject} from "$lib/schema";
-import {and, eq, gte, inArray, lte} from "drizzle-orm";
+import {and, eq, gte, inArray, lte, or} from "drizzle-orm";
 
 export interface DetailSubjectData {
     id: string,
@@ -43,7 +43,8 @@ export interface NonDetailScheduleData {
 export interface DayMonthScheduleData {
     date: number,
     special: number,
-    info: string
+    info: string,
+    holiday: boolean
 }
 
 export type DetailSubjectsMap = Map<string, DetailSubjectData>;
@@ -238,20 +239,28 @@ export const GetMonthSchedule = async (DB: typeof db, baseMonth: Date, subjectsA
             if (!scheduleMap.has(date)) scheduleMap.set(date, {
                 date: date,
                 special: subject.special,
-                info: subject.short
+                info: subject.short,
+                holiday: false
             });
         }
     }
+    const NotHolidays = new Set((await DB.selectDistinct({
+        date: schedule.date,
+    }).from(schedule).where(lte(schedule.date,6))).map(v => v.date));
+
     const data: MonthSchedule = [];
     for (let i = 0; i < total; i++) {
         const date = new Date(startDate);
         date.setDate(date.getDate() + i);
+        const day = date.getDay();
         const dateInt = scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
+
         if (scheduleMap.has(dateInt)) data.push(scheduleMap.get(dateInt) as DayMonthScheduleData);
         else data.push({
             date: dateInt,
             special: 0,
-            info: ""
+            info: "",
+            holiday: !NotHolidays.has(day)
         });
     }
     return data;
