@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Button, Card, Input, Label, Modal, Spinner, Toast} from "flowbite-svelte";
+    import {Button, Card, FloatingLabelInput, Input, Label, Modal, Spinner, Toast} from "flowbite-svelte";
     import {slide} from "svelte/transition";
     import EditOutline from 'flowbite-svelte-icons/EditOutline.svelte';
     import CheckSolid from "flowbite-svelte-icons/CheckSolid.svelte";
@@ -130,7 +130,7 @@
         </Button>
     </div>
 </Card>
-<Modal title="{editType} new Subject" bind:open={newSubjectModal} outsideclose={!running} size="lg">
+<Modal title="{editType} new Subject" bind:open={newSubjectModal} outsideclose={!running}>
     {#if running}
         <div class="flex justify-center items-center h-64">
             <Spinner size="24"/>
@@ -138,25 +138,20 @@
     {:else }
         <div class="grid gap-6 mb-6 md:grid-cols-2">
             <div>
-                <Label for="new_name" class="mb-2">教科名</Label>
-                <Input type="text" id="new_name" placeholder="教科名" required bind:value={editingSubject.name}/>
+                <FloatingLabelInput label="教科名" required bind:value={editingSubject.name}/>
             </div>
             <div>
-                <Label for="new_short" class="mb-2">教科名（短）</Label>
-                <Input type="text" id="new_short" placeholder="教科名（短）" required bind:value={editingSubject.short}/>
+                <FloatingLabelInput label="教科名（短）" required bind:value={editingSubject.short}/>
             </div>
             <div>
-                <Label for="new_teacher" class="mb-2">担当教員</Label>
-                <Input type="text" id="new_teacher" placeholder="担当教員" bind:value={editingSubject.teacher}/>
+                <FloatingLabelInput label="担当教員" bind:value={editingSubject.teacher}/>
             </div>
             <div>
-                <Label for="new_room" class="mb-2">教室</Label>
-                <Input type="text" id="new_room" placeholder="教室" bind:value={editingSubject.room}/>
+                <FloatingLabelInput label="教室" bind:value={editingSubject.room}/>
             </div>
         </div>
         <div>
-            <Label for="new_memo" class="mb-2">メモ</Label>
-            <Input type="text" id="new_memo" placeholder="メモ" bind:value={editingSubject.memo}/>
+            <FloatingLabelInput label="メモ" bind:value={editingSubject.memo}/>
         </div>
     {/if}
     <svelte:fragment slot='footer'>

@@ -34,14 +34,6 @@
     }
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 </script>
-<div class="w-full grid grid-cols-4 gap-2">
-    <Card href="/schedule/edit/default" class="!p-2 h-fit flex items-center justify-center">
-        Default
-    </Card>
-    <Card href="/schedule/edit/subject" class="!p-2 h-fit flex items-center justify-center">
-        Subject
-    </Card>
-</div>
 <Card size="xl" class="mt-4">
     <div class="w-full h-12 flex justify-between items-center mb-4">
         <ButtonGroup>
