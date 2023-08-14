@@ -63,9 +63,9 @@
             </NavLi>
 
             <Dropdown triggeredBy="#nav-schedule" class="w-[80vw] md:w-44 z-20">
-                <DropdownItem href={`/schedule/month/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Month</DropdownItem>
-                <DropdownItem href={`/schedule/week/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Week</DropdownItem>
-                <DropdownItem href={`/schedule/date/${date.getFullYear()}/${date.getMonth()+1}/${date.getDate()}`}>Date</DropdownItem>
+                <DropdownItem href="/schedule/month/{date.getFullYear()}/{date.getMonth()+1}">Month</DropdownItem>
+                <DropdownItem href="/schedule/week/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Week</DropdownItem>
+                <DropdownItem href="/schedule/date/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Date</DropdownItem>
                 <DropdownDivider/>
                 <DropdownItem href="/schedule/edit">Edit</DropdownItem>
             </Dropdown>

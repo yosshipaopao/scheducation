@@ -1,6 +1,6 @@
 import type {db} from "$lib/server/newDB";
 import {DateEntry, TimeTable, Subject} from "$lib/newschema";
-import {and, eq, gte, lte, or, sql} from "drizzle-orm";
+import {and, eq, gte, lte, ne, or, sql} from "drizzle-orm";
 
 export interface MonthDateSchedule {
     date: number,
@@ -8,13 +8,11 @@ export interface MonthDateSchedule {
     special: boolean,
     info: string
 }
-
 export interface WeekTimeSchedule {
     date: number,
     time: number,
     name: string
 }
-
 export interface DateTimeSchedule {
     time: number,
     name: string,
@@ -46,10 +44,11 @@ export const GetMonthSchedule = async (DB: typeof db, Arg: { year: number, month
     */
     const raw = await DB.select({
         date: DateEntry.date,
-        holiday: sql<boolean>`CASE WHEN ${or(eq(TimeTable.date,DateEntry.date),eq(TimeTable.date,DateEntry.day))} THEN ${true} ELSE ${false} END`.as("holiday"),
-        special: sql<boolean>`CASE WHEN ${eq(TimeTable.date,DateEntry.date)} THEN ${true} ELSE ${false} END`.as("special"),
+        holiday:DateEntry.holiday,
+        special: sql<boolean>`CASE WHEN ${eq(TimeTable.date,DateEntry.date)} THEN ${false} ELSE ${true} END`.as("special"),
         info: DateEntry.info
-    }).from(DateEntry).where(or(gte(DateEntry.date, startInt), lte(DateEntry.date, endInt))).leftJoin(TimeTable, or(eq(DateEntry.date, TimeTable.date), eq(DateEntry.day, TimeTable.date)));
+    }).from(DateEntry).where(and(or(gte(DateEntry.date, startInt), lte(DateEntry.date, endInt)),ne(DateEntry.holiday, true)))
+        .leftJoin(TimeTable, or(eq(DateEntry.date, TimeTable.date), eq(DateEntry.day, TimeTable.date)));
     const map = new Map<number, MonthDateSchedule>();
     raw.forEach(v => map.set(v.date, v));
     //整形
@@ -75,10 +74,11 @@ export const GetWeekSchedule = async (DB: typeof db, Arg: { year: number, month:
         date: TimeTable.date,
         time: TimeTable.time,
         name: Subject.name,
-    }).from(TimeTable).where(or(
+    }).from(TimeTable).where(and(or(
         lte(TimeTable.date, 6),
-        and(gte(TimeTable.date, startInt), lte(TimeTable.date, endInt))
-    )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.date, TimeTable.time);
+        and(gte(TimeTable.date, startInt), lte(TimeTable.date, endInt)),
+        ne(DateEntry.holiday, true))
+    )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).leftJoin(DateEntry,eq(TimeTable.date,DateEntry.date)).orderBy(TimeTable.date, TimeTable.time);
     const map = new Map<number, WeekDateSchedule>();
     raw.forEach(v => {
         if (!map.has(v.date)) map.set(v.date, []);
@@ -113,10 +113,12 @@ export const GetDateSchedule = async (DB: typeof db, Arg: { year: number, month:
         teacher: Subject.teacher,
         room: Subject.room,
         info: Subject.info,
-    }).from(TimeTable).where(or(
-        eq(TimeTable.date, baseInt),
-        eq(TimeTable.date, day)
-    )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.time);
+    }).from(TimeTable).where(and(or(
+            eq(TimeTable.date, baseInt),
+            eq(TimeTable.date, day)
+        ),
+        ne(DateEntry.holiday, true)
+    )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).leftJoin(DateEntry,eq(TimeTable.date,DateEntry.date)).orderBy(TimeTable.time);
     const defaultMap = new Map<number, DateTimeSchedule>();
     const specialMap = new Map<number, DateTimeSchedule>();
     let maxTime = 0;

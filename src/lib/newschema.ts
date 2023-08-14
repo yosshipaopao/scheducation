@@ -1,4 +1,4 @@
-import {pgTable, serial, varchar, integer} from "drizzle-orm/pg-core";
+import {pgTable, serial, varchar, integer, boolean} from "drizzle-orm/pg-core";
 
 export const ClassEntry = pgTable("class", {
     id: serial("id").primaryKey(),
@@ -18,8 +18,7 @@ export const DateEntry = pgTable("DateEntry", {
     date: integer("date").notNull(),
     day: integer("day").notNull(),
     info: varchar("info").notNull().default(""),
-    //isHoliday=>check if it has timetable of that day and date
-    //isSpecial=>check if it has timetable of that date
+    holiday: boolean("holiday").notNull().default(false)
 });
 export const TimeTable = pgTable("TimeTable", {
     id: serial("id").primaryKey(),

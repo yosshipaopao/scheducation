@@ -3,24 +3,12 @@
     import type {PageData} from "./$types";
     import {goto} from "$app/navigation";
     import {ChevronLeftSolid, ChevronRightSolid} from "flowbite-svelte-icons";
+    import MonthSkeleton from "$lib/components/schedule/MonthSkeleton.svelte";
 
     export let data: PageData;
     let year = data.slug.year;
     let month = data.slug.month;
     let dates: { date: Date, holiday: boolean }[] = [];
-    const updateDays = (year: number, month: number) => {
-        dates = [];
-        const startDate = new Date(year, month - 1, 1);
-        startDate.setDate(-startDate.getDay() + 1);
-        const finalDate = new Date(year, month, 0);
-        finalDate.setDate(finalDate.getDate() + 6 - finalDate.getDay());
-        const total = (finalDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24) + 1;
-        const date = new Date(startDate);
-        for (let i = 0; i < total; i++) {
-            dates.push({date: new Date(date), holiday: data.data[i]});
-            date.setDate(date.getDate() + 1);
-        }
-    }
     $: {
         if (month < 1) {
             year--;
@@ -31,7 +19,6 @@
             month = 1;
         }
         if (year !== data.slug.year || month !== data.slug.month) goto(`/schedule/edit/month/${year}/${month}`)
-        updateDays(year, month);
     }
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 </script>
@@ -48,7 +35,7 @@
         </ButtonGroup>
         <ButtonGroup>
             <Button on:click={() => {
-            month--;
+            month++;
         }}>
                 <ChevronRightSolid/>
             </Button>
@@ -57,22 +44,24 @@
     </div>
     <div class="overflow-x-auto">
         <div class="w-[960px] h-fit grid grid-cols-7 gap-2 mb-2">
+
             {#each days as day}
                 <Card class="h-8 !p-2 relative dark:text-white flex flex-col items-center justify-center">
                     <p>{day}</p>
                 </Card>
             {/each}
-            {#each dates as v}
-                <Card class="h-28 !p-0 relative dark:text-white flex flex-col items-center justify-center gap-2">
-                    <a class="w-full h-full flex items-center justify-center"
-                       href={`/schedule/edit/date/${v.date.getFullYear()}/${v.date.getMonth()+1}/${v.date.getDate()}`}>
-                        <p class="text-2xl">{`${v.date.getMonth() + 1}/${v.date.getDate()}`}</p>
-                    </a>
-                    <div class="w-full h-[75%] flex items-center justify-center">
-                        <Toggle bind:checked={v.holiday}>Holiday</Toggle>
-                    </div>
-                </Card>
-            {/each}
+            {#await data.streamed.data}
+                <MonthSkeleton/>
+            {:then value}
+                {#each value as v}
+                    <Card class="h-28 !p-2 relative dark:text-white flex flex-col items-center justify-center gap-2">
+                        <a class="w-full h-full flex items-center justify-center" href="/schedule/edit/date/{Math.round(v.date / 10000)}/{Math.round(v.date / 100) % 100}/{v.date % 100}"><p>{Math.round(v.date / 100) % 100}/{v.date % 100}</p></a>
+                        <Toggle bind:checked={v.holiday} disabled={v.defaultHoliday}>Holiday</Toggle>
+                    </Card>
+                {/each}
+            {:catch error}
+                <p>{error.message}</p>
+            {/await}
         </div>
     </div>
 </Card>

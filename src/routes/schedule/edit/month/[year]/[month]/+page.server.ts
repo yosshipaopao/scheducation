@@ -1,9 +1,8 @@
 import type {PageServerLoad} from "./$types";
 import {redirect} from "@sveltejs/kit";
-import scheduleScript from "$lib/schedule";
-import {db} from "$lib/server/db";
-import {schedule} from "$lib/schema";
-import {and, gte, lte, or} from "drizzle-orm";
+import {db} from "$lib/server/newDB";
+import {DateEntry, TimeTable} from "$lib/newschema";
+import {and, eq, gte, lte, ne, or, sql} from "drizzle-orm";
 
 export const load: PageServerLoad = async ({parent, params}) => {
     const {session} = await parent();
@@ -12,28 +11,51 @@ export const load: PageServerLoad = async ({parent, params}) => {
     const month = parseInt(params.month);
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) throw redirect(303, "/schedule/edit");
 
-    const startDate = new Date(year, month - 1, 1);
-    startDate.setDate(-startDate.getDay() + 1);
-    const finalDate = new Date(year, month, 0);
-    finalDate.setDate(finalDate.getDate() + 6 - finalDate.getDay());
-    const startInt = scheduleScript.convertDate(startDate.getFullYear(), startDate.getMonth() + 1, startDate.getDate());
-    const finalInt = scheduleScript.convertDate(finalDate.getFullYear(), finalDate.getMonth() + 1, finalDate.getDate());
-    const data = new Set((await db.selectDistinct({
-        date: schedule.date,
-    }).from(schedule).where(or(and(lte(schedule.date, finalInt), gte(schedule.date, startInt)),lte(schedule.date,6))).orderBy(schedule.date)).map(v => v.date));
-    const isHolidays :boolean[] = [];
-    const date= new Date(startDate);
-    for(let i=0;i<Math.floor((finalDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;i++){
-        const int = scheduleScript.convertDate(date.getFullYear(), date.getMonth() + 1, date.getDate());
-        const day = date.getDay();
-        isHolidays.push(!(data.has(day)||data.has(int)));
-        date.setDate(date.getDate() + 1);
-    }
-    return{
-        slug: {
-            year: year,
-            month: month
-        },
-        data: isHolidays
+
+    return {
+        slug: {year, month},
+        streamed: {
+            data: new Promise<{
+                    date: number,
+                    holiday: boolean,
+                    defaultHoliday: boolean,
+                    info: string
+                }[]>(async (resolve) => {
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0);
+                startDate.setDate(startDate.getDate() - startDate.getDay());
+                endDate.setDate(endDate.getDate() + (6 - endDate.getDay()));
+                const startInt = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
+                const endInt = endDate.getFullYear() * 10000 + (endDate.getMonth() + 1) * 100 + endDate.getDate();
+                const total = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
+                const raw = await db.select({
+                    date: DateEntry.date,
+                    holiday: DateEntry.holiday,
+                    info: DateEntry.info,
+        special: sql<boolean>`CASE WHEN ${eq(TimeTable.date,DateEntry.date)} THEN ${false} ELSE ${true} END`.as("special"),
+                }).from(DateEntry).where(and(or(gte(DateEntry.date, startInt), lte(DateEntry.date, endInt)), ne(DateEntry.holiday, true)));
+                const map = new Map<number, {
+                    date: number,
+                    holiday: boolean,
+                    defaultHoliday: boolean,
+                    info: string
+                }>();
+                raw.forEach(v => map.set(v.date, {...v, defaultHoliday: false}));
+                //整形
+                const result:{
+                    date: number,
+                    holiday: boolean,
+                    defaultHoliday: boolean,
+                    info: string
+                }[] = [];
+                for (let i = 0; i < total; i++) {
+                    const n = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
+                    const d = startDate.getDay();
+                    result.push(map.get(n) ?? map.get(d) ?? {date: n, holiday: true, defaultHoliday: true, info: ""});
+                    startDate.setDate(startDate.getDate() + 1);
+                }
+                resolve(result)
+            })
+        }
     }
 }
