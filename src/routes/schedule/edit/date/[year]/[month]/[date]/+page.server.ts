@@ -1,7 +1,7 @@
 import type {Actions, PageServerLoad} from './$types';
 import {redirect} from "@sveltejs/kit";
 import scheduleScript from "$lib/schedule";
-import {db} from "$lib/server/db";
+import {db} from "$lib/server/newDB";
 import {GetDateSchedule, GetDetailSubjects} from "$lib/server/schedule/Data";
 import {schedule, subject} from "$lib/schema";
 import {and, eq, inArray, ne} from "drizzle-orm";

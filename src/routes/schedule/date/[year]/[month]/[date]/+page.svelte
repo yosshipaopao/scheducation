@@ -1,16 +1,12 @@
 <script lang="ts">
     import type {PageData} from "./$types";
     import {goto} from "$app/navigation";
-    import {Button, ButtonGroup, Card, Indicator, Select} from "flowbite-svelte";
+    import {Button, Card, Select} from "flowbite-svelte";
     import {
-        ChervonDoubleLeftSolid,
-        ChervonDoubleRightSolid,
         ChevronLeftSolid,
         ChevronRightSolid
     } from "flowbite-svelte-icons";
     import DateSkeleton from "$lib/components/schedule/DateSkeleton.svelte";
-    import WeekSkeleton from "$lib/components/schedule/WeekSkeleton.svelte";
-    import MonthSkeleton from "$lib/components/schedule/MonthSkeleton.svelte";
 
     export let data: PageData;
 

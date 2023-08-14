@@ -32,7 +32,7 @@ export const load: PageServerLoad = async ({parent, params}) => {
                     date: DateEntry.date,
                     holiday: DateEntry.holiday,
                     info: DateEntry.info,
-        special: sql<boolean>`CASE WHEN ${eq(TimeTable.date,DateEntry.date)} THEN ${false} ELSE ${true} END`.as("special"),
+                    special: sql<boolean>`CASE WHEN ${eq(TimeTable.date,DateEntry.date)} THEN ${false} ELSE ${true} END`.as("special"),
                 }).from(DateEntry).where(and(or(gte(DateEntry.date, startInt), lte(DateEntry.date, endInt)), ne(DateEntry.holiday, true)));
                 const map = new Map<number, {
                     date: number,
