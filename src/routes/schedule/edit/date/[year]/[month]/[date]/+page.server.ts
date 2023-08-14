@@ -1,48 +1,83 @@
 import type {Actions, PageServerLoad} from './$types';
-import {redirect} from "@sveltejs/kit";
-import scheduleScript from "$lib/schedule";
+import {error} from "@sveltejs/kit";
 import {db} from "$lib/server/newDB";
-import {GetDateSchedule, GetDetailSubjects} from "$lib/server/schedule/Data";
-import {schedule, subject} from "$lib/schema";
-import {and, eq, inArray, ne} from "drizzle-orm";
+import {  GetDefaultSubjects} from "$lib/server/schedule/newDB";
+import type {DateSchedule, DateTimeSchedule} from "$lib/server/schedule/newDB";
+import {DateEntry, Subject, TimeTable} from "$lib/newschema";
+import {and, asc, desc, eq, inArray, isNull, or} from "drizzle-orm";
 
 
 export const load = (async ({params, parent}) => {
     const {session} = await parent();
-    if (!session?.user) throw redirect(303, "/signin");
-    const defaults = scheduleScript.defaults();
-    const {year, month, date} = scheduleScript.check("week", params.year ?? defaults.year, params.month ?? defaults.month, params.date ?? defaults.date);
+    if (!session?.user) throw error(403, "Not logged in");
+    const year = parseInt(params.year);
+    const month = parseInt(params.month);
+    const date = parseInt(params.date);
+    const isDate = new Date(year, month - 1, date).getDate() === date;
+    if (!isDate) throw error(403, "Invalid params");
+
     const baseDate = new Date(year, month - 1, date);
-    const baseInt = scheduleScript.convertDate(year, month, date)
-    const defaultSchedule = await db.select({
-        time: schedule.time,
-        subject: schedule.subject,
-        belongings: schedule.belongings,
-        memo: schedule.memo,
-        special: schedule.special
-    }).from(schedule).where(eq(schedule.date, baseDate.getDay())).orderBy(schedule.time);
-    const specialSchedule = await db.select({
-        time: schedule.time,
-        subject: schedule.subject,
-        belongings: schedule.belongings,
-        memo: schedule.memo,
-        special: schedule.special
-    }).from(schedule).where(and(eq(schedule.date, baseInt), ne(schedule.special, 0)));
-    const defaultSubjects = await GetDetailSubjects(db, {special: [0]});
-    const specialSubjects = await GetDetailSubjects(db, {special: [1]});
+    const day = baseDate.getDay();
+    const baseInt = year * 10000 + month * 100 + date;
+    //check is holiday
+    const isHoliday = await db.selectDistinct({
+        holiday: DateEntry.holiday,
+    }).from(DateEntry).where(eq(DateEntry.date, baseInt));
+
+    const before: DateSchedule = [];
+    const notUsedMap = new Map<number, DateTimeSchedule>();
+    if (!(isHoliday.length > 0 && isHoliday[0].holiday)) {
+        const raw = await db.select({
+            date: TimeTable.date,
+            time: TimeTable.time,
+            spInfo: TimeTable.info,
+            spRoom: TimeTable.room,
+            name: Subject.name,
+            teacher: Subject.teacher,
+            room: Subject.room,
+            info: Subject.info,
+        }).from(TimeTable).where(and(
+            inArray(TimeTable.date, [baseInt, day]),
+            or(isNull(DateEntry.holiday), eq(DateEntry.holiday, false))
+        )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).leftJoin(DateEntry, eq(TimeTable.date, DateEntry.date)).orderBy(desc(TimeTable.date), asc(TimeTable.time));
+        const map = new Map<number, DateTimeSchedule>();
+        let maxTime = 0;
+        raw.forEach(v => {
+            const data = {
+                time: v.time,
+                name: v.name ?? "不明",
+                teacher: v.teacher ?? "",
+                room: v.spRoom.length ?? 0 > 0 ? v.spRoom : v.room ?? "",
+                info: v.spInfo.length ?? 0 > 0 ? v.spInfo : v.info ?? "",
+            }
+            if (map.has(v.time)) {
+                if (v.date > 6) map.set(v.time, {...data,special:true});
+                else notUsedMap.set(v.time, {...data,special:false});
+            } else {
+                map.set(v.time, {...data,special:false});
+            }
+            maxTime = Math.max(maxTime, v.time) + 1;
+        });
+
+        for (let i = 0; i < maxTime; i++) before.push(map.get(i) ?? {
+            time: i,
+            name: "不明",
+            teacher: "",
+            room: "",
+            info: "this is bug maybe...",
+            special:true
+        });
+    }
+    const defaultSubjects = await GetDefaultSubjects(db);
     return {
-        slug: {
-            year: year,
-            month: month,
-            date: date
-        },
-        defaultSchedule,
-        specialSchedule,
+        slug: {year, month, date},
         defaultSubjects,
-        specialSubjects
+        notUsedSchedule: notUsedMap,
+        data: before,
     }
 }) satisfies PageServerLoad;
 
+/*
 export const actions = {
     default: async ({params, request, locals}) => {
         const session = await locals.getSession();
@@ -95,4 +130,5 @@ export const actions = {
 
         if (newSubjects.length > 0) await db.insert(subject).values(newSubjects);
     }
-}satisfies Actions;
+    }
+} satisfies Actions;*/

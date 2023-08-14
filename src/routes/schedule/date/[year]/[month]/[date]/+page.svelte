@@ -18,7 +18,7 @@
     const newDate = (year: number, month: number, date: number, w: number) => {
         const d = new Date(year, month - 1, date);
         d.setDate(d.getDate() + w);
-        return `/schedule/week/${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+        return `/schedule/date/${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
     };
     const modes = [
         {value: 'month', name: 'Month'},

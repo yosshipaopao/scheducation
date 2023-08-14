@@ -8,7 +8,9 @@
     export let data: PageData;
     let year = data.slug.year;
     let month = data.slug.month;
-    let dates: { date: Date, holiday: boolean }[] = [];
+    let updated= new Map<number,boolean>();
+
+    let V :any[]|undefined;
     $: {
         if (month < 1) {
             year--;
@@ -39,12 +41,11 @@
         }}>
                 <ChevronRightSolid/>
             </Button>
-            <Button>Save</Button>
+            <Button on:click={()=>console.log(updated)}>Save</Button>
         </ButtonGroup>
     </div>
     <div class="overflow-x-auto">
         <div class="w-[960px] h-fit grid grid-cols-7 gap-2 mb-2">
-
             {#each days as day}
                 <Card class="h-8 !p-2 relative dark:text-white flex flex-col items-center justify-center">
                     <p>{day}</p>
@@ -56,7 +57,12 @@
                 {#each value as v}
                     <Card class="h-28 !p-2 relative dark:text-white flex flex-col items-center justify-center gap-2">
                         <a class="w-full h-full flex items-center justify-center" href="/schedule/edit/date/{Math.round(v.date / 10000)}/{Math.round(v.date / 100) % 100}/{v.date % 100}"><p>{Math.round(v.date / 100) % 100}/{v.date % 100}</p></a>
-                        <Toggle bind:checked={v.holiday} disabled={v.defaultHoliday}>Holiday</Toggle>
+                        <Toggle bind:checked={v.holiday} disabled={v.defaultHoliday} on:change={()=>{
+                            if (updated.has(v.date)) updated.delete(v.date);
+                            else updated.set(v.date, v.holiday);
+                            console.log(value)
+                            V=value
+                        }}>Holiday</Toggle>
                     </Card>
                 {/each}
             {:catch error}
