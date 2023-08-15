@@ -230,13 +230,9 @@ export const SearchSubjects = async (DB: typeof db, {limit = 50, offset = 0, q =
         room: Subject.room,
         info: Subject.info,
     }).from(Subject)
-        .leftJoin(TimeTable, and(
-            eq(Subject.id, TimeTable.subject),
-            between(TimeTable.date, 0, 6)))
-        .where(and(
-            isNull(TimeTable.date),
+        .where(
             like(Subject.name, `%${q}%`),
-        ))
+        )
         .limit(limit)
         .offset(offset);
     return raw satisfies SubjectsData;

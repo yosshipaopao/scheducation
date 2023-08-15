@@ -3,15 +3,11 @@ import {schedule, subject} from "$lib/schema";
 import type {Actions, PageServerLoad} from "./$types";
 import {error, redirect} from "@sveltejs/kit";
 import {eq} from "drizzle-orm";
-import { GetDetailSubjects} from "$lib/server/schedule/Data";
 
 export const load = (async ({parent}) => {
     const {session} = await parent();
     if (!session?.user) throw redirect(303, "/signin");
-
-    const subjects = await GetDetailSubjects(db);
-
-    return {subjects};
+    return {};
 }) satisfies PageServerLoad;
 
 export const actions = {
