@@ -59,7 +59,7 @@
                 {#each value as v}
                     <Card href={`/schedule/date/${Math.round(v.date/10000)}/${Math.round(v.date%10000/100)}/${v.date%100}`}
                           class="h-28 !p-4 relative dark:text-white flex flex-col items-center justify-center {v.holiday?'!text-slate-500':''}" color={v.holiday?"form":"default"}>
-                        {#if v.special}
+                        {#if v.special&&!v.holiday}
                             <Indicator color="red" border size="xl" placement="top-right"/>
                         {/if}
                         <p>{Math.round(v.date%10000/100)}/{v.date%100}</p>

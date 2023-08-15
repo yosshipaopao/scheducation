@@ -92,6 +92,9 @@
             <ChevronRightSolid/>
         </Button>
         <ButtonGroup>
+            <Button on:click={() => {
+                schedule = defaultSchedule.map(v => ({...v}));
+            }}>Reset</Button>
             <Button on:click={post}>Save</Button>
         </ButtonGroup>
     </div>
@@ -103,8 +106,8 @@
                         <p class="text-2xl dark:text-white">{v.time + 1}</p>
                         <p class="text-2xl dark:text-white">{v.name}</p>
                     </Card>
-                    <Card size="xl" class="grow flex flex-row !p-2">
-                        <div class="aspect-square h-full flex flex-col items-center justify-center">
+                    <Card size="xl" class="grow flex flex-row !py-2 !px-4">
+                        <div class="flex flex-col items-center justify-center mr-4">
                             <Toggle bind:checked={v.special} on:change={()=>{
                                 }}>Special</Toggle>
                             {#if v.hasNotUsed&&!v.special}
@@ -126,8 +129,8 @@
                             {/if}
                         </div>
                         <p>{JSON.stringify(v)}</p>
-                        <div class="aspect-square h-full flex items-center justify-center">
-                            <Button class="flex flex-col !p-2 aspect-square">
+                        <div class="flex items-center justify-center">
+                            <Button class="flex flex-col !p-2">
                                 <TrashBinSolid/>
                                 Delete
                             </Button>

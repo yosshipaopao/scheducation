@@ -190,7 +190,7 @@ export const GetDateSchedule = async (DB: typeof db, {year, month, date}: {
         if (map.has(v.time)) {
             if (v.date > 6) map.set(v.time, {...data,special:true});
         } else {
-            map.set(v.time, {...data,special:false});
+            map.set(v.time, {...data,special:v.date > 6 });
         }
         maxTime = Math.max(maxTime, v.time) + 1;
     });

@@ -1,7 +1,7 @@
 <script lang="ts">
     import type {PageData} from "./$types";
     import {goto} from "$app/navigation";
-    import {Button, Card, Select} from "flowbite-svelte";
+    import {Button, Card, Indicator, Select} from "flowbite-svelte";
     import {
         ChevronLeftSolid,
         ChevronRightSolid
@@ -25,7 +25,7 @@
         {value: 'week', name: 'Week'},
         {value: 'date', name: 'Date'},
     ];
-    let nextMode: string = 'week';
+    let nextMode: string = 'date';
     const gotoNextMode = () => goto(nextMode === 'month' ? `/schedule/month/${year}/${month}` : `/schedule/${nextMode}/${year}/${month}/${date}`);
 
     const days = ["日", "月", "火", "水", "木", "金", "土"];
@@ -50,13 +50,16 @@
         </Button>
     </div>
     <div class="overflow-x-auto">
-        <div class="w-[960px] grid grid-rows-7 gap-1 sm:gap-2 mb-2">
+        <div class="w-[960px] grid grid-rows-7 gap-1 sm:gap-2 my-2">
             {#await data.streamed.data}
                 <DateSkeleton/>
             {:then value}
                 {#each value as v}
                     <div class="flex gap-1 sm:gap-2">
-                        <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center">
+                        <Card class="h-24 !p-2 aspect-square flex flex-col items-center justify-center relative">
+                            {#if v.special}
+                                <Indicator color="red" border size="xl" placement="top-right"/>
+                            {/if}
                             <p class="text-2xl dark:text-white">{v.time + 1}</p>
                             <p class="text-2xl dark:text-white">{v.name}</p>
                         </Card>

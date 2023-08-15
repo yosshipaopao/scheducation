@@ -54,7 +54,7 @@ export const load = (async ({params, parent}) => {
                 if (v.date > 6) map.set(v.time, {...data,special:true});
                 else notUsedMap.set(v.time, {...data,special:false});
             } else {
-                map.set(v.time, {...data,special:false});
+                map.set(v.time, {...data,special:v.date > 6});
             }
             maxTime = Math.max(maxTime, v.time) + 1;
         });
