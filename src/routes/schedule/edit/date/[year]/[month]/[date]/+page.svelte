@@ -16,7 +16,7 @@
     $:date = data.slug.date;
     //subject関係
     $:defaultSubjects = new Map<number, SubjectData>(data.defaultSubjects.map(v => [v.id, v]));
-    $:notUsedSchedule = data.notUsedSchedule
+    $:notUsedSchedule = data.notUsedSchedule;
     let schedule: {
         time: number,
         name: string,
@@ -26,12 +26,12 @@
         special: boolean,
         id: number,
         hasNotUsed: boolean,
-        useNotUsed: boolean
+        unknown: boolean
     }[] = [];
-    let defaultSchedule: typeof schedule = [];
+    let resetSchedule: typeof schedule = [];
     const update = (d: typeof data.data) => {
-        schedule = d.map(v => ({...v, id: -1, hasNotUsed: notUsedSchedule.has(v.time), useNotUsed:false}));
-        defaultSchedule = d.map(v => ({...v, id: -1, hasNotUsed: notUsedSchedule.has(v.time), useNotUsed:false}));
+        schedule = d.map(v => ({...v, hasNotUsed: notUsedSchedule.has(v.time)}));
+        resetSchedule = d.map(v => ({...v, hasNotUsed: notUsedSchedule.has(v.time)}));
     }
     $:update(data.data)
 
@@ -93,8 +93,9 @@
         </Button>
         <ButtonGroup>
             <Button on:click={() => {
-                schedule = defaultSchedule.map(v => ({...v}));
-            }}>Reset</Button>
+                schedule = resetSchedule.map(v => ({...v}));
+            }}>Reset
+            </Button>
             <Button on:click={post}>Save</Button>
         </ButtonGroup>
     </div>
@@ -107,37 +108,84 @@
                         <p class="text-2xl dark:text-white">{v.name}</p>
                     </Card>
                     <Card size="xl" class="grow flex flex-row !py-2 !px-4">
-                        <div class="flex flex-col items-center justify-center mr-4">
-                            <Toggle bind:checked={v.special} on:change={()=>{
-                                }}>Special</Toggle>
-                            {#if v.hasNotUsed&&!v.special}
-                                <Toggle bind:checked={v.useNotUsed} on:change={()=>{
-                                    if(v.useNotUsed){
-                                        v={...notUsedSchedule.get(v.time),
-                                            id: -1,
-                                            hasNotUsed: true,
-                                            useNotUsed: true
-                                        };
-                                    }else {
-                                        v={...defaultSchedule[v.time],
-                                            id: -1,
-                                            hasNotUsed: true,
-                                            useNotUsed: false
-                                        };
-                                    }
-                                }}/>
+                        <div class="flex flex-col items-center justify-center mr-4 gap-2">
+                            {#if !v.unknown}
+                                <Toggle bind:checked={v.special} on:change={()=>{
+                                if(v.hasNotUsed&&!v.special)v={...notUsedSchedule.get(v.time),hasNotUsed: true};
+                                else if(v.hasNotUsed&&v.special)v={...resetSchedule[v.time],hasNotUsed: true};
+                            }} disabled={v.unknown||!v.hasNotUsed}>Special
+                                </Toggle>
                             {/if}
                         </div>
-                        <p>{JSON.stringify(v)}</p>
+                        <div class="grow overflow-hidden">
+                            {#if v.unknown}
+                                <p>休み</p>
+                            {:else if v.special}
+                                editable
+                                <p>{JSON.stringify(v)}</p>
+                            {:else }
+                                <p>{JSON.stringify(v)}</p>
+                            {/if}
+                        </div>
                         <div class="flex items-center justify-center">
-                            <Button class="flex flex-col !p-2">
-                                <TrashBinSolid/>
-                                Delete
-                            </Button>
+                            {#if v.unknown}
+                                <Button class="flex flex-col !p-2" on:click={()=>{
+                                    if(resetSchedule[v.time]&&!resetSchedule[v.time].unknown)v=resetSchedule[v.time]
+                                    else v=({
+                                        time: v.time,
+                                        name: "",
+                                        teacher: "",
+                                        room: "",
+                                        info: "",
+                                        special:true,
+                                        unknown:false,
+                                        id:-1
+                                    })
+                                }}>
+                                    <TrashBinSolid/>
+                                    Add
+                                </Button>
+                            {:else }
+                                <Button class="flex flex-col !p-2" on:click={()=>{
+                                    if(v.time===schedule.length-1){schedule.pop();schedule=schedule;}
+                                    else v=({
+                                        time: v.time,
+                                        name: "なし",
+                                        teacher: "",
+                                        room: "",
+                                        info: "休み",
+                                        special:true,
+                                        unknown:true,
+                                        id:-1
+                                    })}}>
+                                    <TrashBinSolid/>
+                                    Delete
+                                </Button>
+                            {/if}
                         </div>
                     </Card>
                 </div>
             {/each}
+            <div>
+                <Button class="flex flex-col !p-2" on:click={()=>{
+                                    if(resetSchedule[schedule.length]&&!resetSchedule[schedule.length].unknown)schedule.push(resetSchedule[schedule.length])
+                                    else schedule.push({
+                                        time: schedule.length,
+                                        name: "",
+                                        teacher: "",
+                                        room: "",
+                                        info: "",
+                                        special:true,
+                                        unknown:false,
+                                        hasNotUsed: false,
+                                        id:-1
+                                    })
+                                    schedule=schedule;
+                                }}>
+                    <TrashBinSolid/>
+                    Add
+                </Button>
+            </div>
         </div>
     </div>
 </Card>

@@ -2,10 +2,20 @@ import type {Actions, PageServerLoad} from './$types';
 import {error} from "@sveltejs/kit";
 import {db} from "$lib/server/newDB";
 import {  GetDefaultSubjects} from "$lib/server/schedule/newDB";
-import type {DateSchedule, DateTimeSchedule} from "$lib/server/schedule/newDB";
 import {DateEntry, Subject, TimeTable} from "$lib/newschema";
 import {and, asc, desc, eq, inArray, isNull, or} from "drizzle-orm";
 
+interface EditDateTimeSchedule {
+    time: number,
+    name: string,
+    teacher: string,
+    room: string,
+    info: string,
+    special: boolean,
+    unknown: boolean,
+    id: number
+}
+type EditDateSchedule = EditDateTimeSchedule[];
 
 export const load = (async ({params, parent}) => {
     const {session} = await parent();
@@ -24,8 +34,9 @@ export const load = (async ({params, parent}) => {
         holiday: DateEntry.holiday,
     }).from(DateEntry).where(eq(DateEntry.date, baseInt));
 
-    const before: DateSchedule = [];
-    const notUsedMap = new Map<number, DateTimeSchedule>();
+    const defaultSubjects = await GetDefaultSubjects(db);
+    const before: EditDateSchedule = [];
+    const notUsedMap = new Map<number, EditDateTimeSchedule>();
     if (!(isHoliday.length > 0 && isHoliday[0].holiday)) {
         const raw = await db.select({
             date: TimeTable.date,
@@ -36,11 +47,14 @@ export const load = (async ({params, parent}) => {
             teacher: Subject.teacher,
             room: Subject.room,
             info: Subject.info,
+            id:Subject.id
         }).from(TimeTable).where(and(
             inArray(TimeTable.date, [baseInt, day]),
             or(isNull(DateEntry.holiday), eq(DateEntry.holiday, false))
         )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).leftJoin(DateEntry, eq(TimeTable.date, DateEntry.date)).orderBy(desc(TimeTable.date), asc(TimeTable.time));
-        const map = new Map<number, DateTimeSchedule>();
+
+        const isDefault=new Set<number>(defaultSubjects.map(v=>v.id));
+        const map = new Map<number, EditDateTimeSchedule>();
         let maxTime = 0;
         raw.forEach(v => {
             const data = {
@@ -49,26 +63,27 @@ export const load = (async ({params, parent}) => {
                 teacher: v.teacher ?? "",
                 room: v.spRoom.length ?? 0 > 0 ? v.spRoom : v.room ?? "",
                 info: v.spInfo.length ?? 0 > 0 ? v.spInfo : v.info ?? "",
+                id:v.id??-1
             }
             if (map.has(v.time)) {
-                if (v.date > 6) map.set(v.time, {...data,special:true});
-                else notUsedMap.set(v.time, {...data,special:false});
+                if (v.date > 6) map.set(v.time, {...data,special:!isDefault.has(data.id),unknown:false});
+                else notUsedMap.set(v.time, {...data,special:false,unknown:false});
             } else {
-                map.set(v.time, {...data,special:v.date > 6});
+                map.set(v.time, {...data,special:!(isDefault.has(data.id)&&v.date<=6),unknown:false});
             }
-            maxTime = Math.max(maxTime, v.time) + 1;
+            maxTime = Math.max(maxTime, v.time+1);
         });
-
         for (let i = 0; i < maxTime; i++) before.push(map.get(i) ?? {
             time: i,
-            name: "不明",
+            name: "なし",
             teacher: "",
             room: "",
-            info: "this is bug maybe...",
-            special:true
+            info: "休み",
+            special:true,
+            unknown:true,
+            id:-1
         });
     }
-    const defaultSubjects = await GetDefaultSubjects(db);
     return {
         slug: {year, month, date},
         defaultSubjects,
