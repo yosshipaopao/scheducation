@@ -1,7 +1,7 @@
 import type { PageServerLoad} from './$types';
-import {db} from "$lib/server/newDB";
-import {GetDateSchedule} from "$lib/server/schedule/newDB";
-import type {DateSchedule} from "$lib/server/schedule/newDB";
+import {db} from "$lib/server/DB";
+import {GetDateSchedule} from "$lib/server/schedule/DB";
+import type {DateSchedule} from "$lib/server/schedule/DB";
 import {error} from "@sveltejs/kit";
 export const load = (async ({params, parent}) => {
     const {session} = await parent();

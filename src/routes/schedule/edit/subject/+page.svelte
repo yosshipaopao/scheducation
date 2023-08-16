@@ -9,8 +9,9 @@
         Toast
     } from "flowbite-svelte";
     import {slide} from "svelte/transition";
-    import {CheckSolid, SearchOutline} from "flowbite-svelte-icons";
+    import {CheckCircleOutline, SearchOutline} from "flowbite-svelte-icons";
     import EditSubjectModal from "$lib/components/schedule/EditSubjectModal.svelte";
+    import AddSubjectModal from "$lib/components/schedule/AddSubjectModal.svelte";
 
 
     let q = '';
@@ -34,7 +35,10 @@
         const res=await fetch("?/delete",{method:"POST",body:form});
         if(res.ok){
             successToast.show=true;
-            successToast.msg="success deleted"
+            successToast.msg="success deleted";
+            const a=q;
+            q="";
+            q=a;
         }else{
             errorToast.show=true;
             errorToast.msg="failed to delete\n"+res.status+" "+res.statusText;
@@ -50,7 +54,30 @@
             room:"",
             info:""
         },
-        onChange:(v:any)=>{},
+        onChange:(v:any)=>{
+            successToast.show=true;
+            successToast.msg="success edited";
+            setTimeout(()=>successToast.show=false,5000);
+            const a=q;
+            q="";
+            q=a;
+        },
+        onFail:(e:string)=>{
+            errorToast.show=true;
+            errorToast.msg=e;
+            setTimeout(()=>errorToast.show=false,5000);
+        }
+    }
+    let addModal={
+        open:false,
+        onChange:()=>{
+            successToast.show=true;
+            successToast.msg="success added";
+            setTimeout(()=>successToast.show=false,5000);
+            const a=q;
+            q="";
+            q=a;
+        },
         onFail:(e:string)=>{
             errorToast.show=true;
             errorToast.msg=e;
@@ -84,7 +111,7 @@
                 <Spinner size="10"/>
             </div>
         {:then v}
-            <div class="h-fit w-full flex flex-row gap-4">
+            <div class="h-fit w-full flex flex-col gap-4 p-4">
                 {#each v as w}
                     <Card size="xl" class="flex flex-row items-center w-full !p-2">
                         <div class="grid grid-cols-2 w-full">
@@ -101,11 +128,6 @@
                             <Button size="sm" on:click={()=>{
                                 editModal.open=true;
                                 editModal.value=w;
-                                editModal.onChange=(x)=>{
-                                    w={...w,...x};
-                                    successToast.show=true;
-                                    successToast.msg="success edited";
-                                };
                             }}>edit</Button>
                             <Button size="sm" on:click={()=>del(w.id)}>delete</Button>
                         </div>
@@ -117,17 +139,22 @@
         {/await}
     </div>
     <div class="w-full flex justify-end">
-        <Button class="btn btn-primary">
+        <Button class="btn btn-primary" on:click={()=>{
+            addModal.open=true;
+        }}>
             Add Subject
         </Button>
     </div>
 </Card>
 <EditSubjectModal bind:open={editModal.open} bind:value={editModal.value} bind:onChange={editModal.onChange} bind:onFail={editModal.onFail}/>
-<Toast class="fixed" position="bottom-right" transition={slide} bind:open={errorToast.show} color="red">
-    <p slot="icon">!</p>
-    {errorToast.msg}
-</Toast>
-<Toast class="fixed" position="bottom-right" transition={slide} bind:open={successToast.show} color="blue">
-    <CheckSolid slot="icon"/>
-    {successToast.msg}
-</Toast>
+<AddSubjectModal bind:open={addModal.open} bind:onChange={addModal.onChange} bind:onFail={addModal.onFail}/>
+<div class="fixed w-72 h-auto bottom-6 right-6 pointer-events-none gap-4 flex flex-col">
+    <Toast transition={slide} bind:open={successToast.show} color="blue">
+        <CheckCircleOutline slot="icon"/>
+        {successToast.msg}
+    </Toast>
+    <Toast transition={slide} bind:open={errorToast.show} color="red">
+        <p slot="icon">!</p>
+        <p>{errorToast.msg}</p>
+    </Toast>
+</div>

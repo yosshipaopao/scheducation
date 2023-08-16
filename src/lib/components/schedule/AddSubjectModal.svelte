@@ -1,63 +1,69 @@
 <script lang="ts">
-    import {Modal, Button, Select, Label, FloatingLabelInput} from "flowbite-svelte";
+    import {Button, FloatingLabelInput, Modal} from "flowbite-svelte";
 
-    export let open = false;
-    export let subjects: any[];
-    export let subjectsSelect: { value: string, name: string }[];
-
-    let subjectForm = {
-        short: "",
+    let value: {
+        name: string,
+        teacher: string,
+        room: string,
+        info: string,
+    }= {
         name: "",
         teacher: "",
         room: "",
-        memo: ""
-    }
-    const Submit = () => {
-        const id = crypto.randomUUID();
-        subjectsSelect.push({value: id, name: subjectForm.name});
-        subjectsSelect = subjectsSelect;
-        subjects.push({
-            id: id,
-            short: subjectForm.short,
-            name: subjectForm.name,
-            teacher: subjectForm.teacher,
-            room: subjectForm.room,
-            memo: subjectForm.memo
-        });
-        subjectForm = {
-            short: "",
+        info: "",
+    };
+    export let open: boolean = false;
+    const reset=(o:boolean)=>{
+        if(!o) value= {
             name: "",
             teacher: "",
             room: "",
-            memo: ""
+            info: "",
+        };
+    }
+    $:reset(open);
+
+
+    export let onChange: Function = () => {
+    };
+    export let onFail: Function = (e: string) => {
+        console.log(e);
+    };
+
+    const Submit = async () => {
+        const formData = new FormData();
+        formData.append("data", JSON.stringify(value));
+        const res = await fetch("/schedule/edit/subject?/add", {
+            method: "POST",
+            body: formData,
+        });
+        if (res.ok) {
+            open = false;
+            onChange();
+        } else {
+            open = false;
+            console.log(res);
+            onFail(res.status + " " + res.statusText);
         }
-        subjects = subjects;
-        open = false;
     }
 </script>
-<Modal title="教科を追加" bind:open={open} autoclose={false} outsideclose>
-    <Label for="select-ex">
-        Example
-        <Select id="select-ex" underline items={subjectsSelect}/>
-    </Label>
+
+<Modal title="Add Subject" bind:open={open} outsideclose>
     <form on:submit|preventDefault={Submit}>
         <div class="grid gap-6 mb-6 md:grid-cols-2">
             <div>
-                <FloatingLabelInput type="text" label="Subject Name(full)" required bind:value={subjectForm.name}/>
+                <FloatingLabelInput type="text" label="Subject Name" required bind:value={value.name}/>
             </div>
             <div>
-                <FloatingLabelInput type="text" label="Subject Name(short)" required bind:value={subjectForm.short}/>
+                <FloatingLabelInput type="text" label="Teacher" required bind:value={value.teacher}/>
             </div>
             <div>
-                <FloatingLabelInput type="text" label="Teacher" bind:value={subjectForm.teacher}/>
+                <FloatingLabelInput type="text" label="Room" bind:value={value.room}/>
             </div>
             <div>
-                <FloatingLabelInput type="text" label="Room" bind:value={subjectForm.room}/>
+                <FloatingLabelInput type="text" label="Info" bind:value={value.info}/>
             </div>
         </div>
-        <div class="mb-6">
-            <FloatingLabelInput type="text" label="Memo" bind:value={subjectForm.memo}/>
-        </div>
-        <Button type="submit">追加</Button>
+        <Button type="submit">更新</Button>
     </form>
 </Modal>

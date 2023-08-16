@@ -1,12 +1,12 @@
-import type {PageServerLoad} from "./$types";
-import {redirect} from "@sveltejs/kit";
-import {db} from "$lib/server/newDB";
-import {DateEntry, TimeTable} from "$lib/newschema";
-import {between,  or} from "drizzle-orm";
+import type {PageServerLoad, Actions} from "./$types";
+import {error, redirect} from "@sveltejs/kit";
+import {db} from "$lib/server/DB";
+import {DateEntry, TimeTable} from "$lib/schema";
+import {between, eq, inArray, or} from "drizzle-orm";
 
-export const load: PageServerLoad = async ({parent, params}) => {
+export const load = (async ({parent, params}) => {
     const {session} = await parent();
-    if (!session?.user) throw redirect(303, "/signin");
+    if (!session?.user) throw error(403, "Not logged in");
     const year = parseInt(params.year);
     const month = parseInt(params.month);
     if (isNaN(year) || isNaN(month) || month < 1 || month > 12) throw redirect(303, "/schedule/edit");
@@ -74,4 +74,43 @@ export const load: PageServerLoad = async ({parent, params}) => {
             })
         }
     }
-}
+}) satisfies PageServerLoad;
+
+export const actions = {
+    default: async ({request, locals}) => {
+        const session = await locals.getSession();
+        if (!session?.user) throw error(403, "Not logged in");
+        const formData = await request.formData();
+        const dataStr = formData.get('data');
+        if (!dataStr) throw error(400, "data is required");
+        if (typeof dataStr !== "string") throw error(400, "data must be string");
+        const data = JSON.parse(dataStr);
+        if (!Array.isArray(data)) throw error(400, "data must be correct format");
+
+        const map = new Map<number, boolean>();
+
+        for (const v of data) {
+            const date = parseInt(v[0]);
+            const holiday = v[1] === true || v[1] === "true";
+            if (isNaN(date) || date < 7) continue;
+            map.set(date, holiday);
+        }
+        const already = new Set((await db.select({
+            date: DateEntry.date,
+        }).from(DateEntry).where(inArray(DateEntry.date, Array.from(map.keys())))).map(v => v.date));
+        const ins: { date: number, holiday: boolean,class:number,day:number }[] = [];
+        const upd: { date: number, holiday: boolean }[] = [];
+        map.forEach((v, k) => {
+            const day = new Date(k).getDay();
+            if (already.has(k)) upd.push({date: k, holiday: v});
+            else ins.push({date: k, holiday: v,class:-1,day});
+        });
+
+        if(ins.length>0) await db.insert(DateEntry).values(ins)
+        for (const v of upd) await db.update(DateEntry).set({holiday: v.holiday}).where(eq(DateEntry.date, v.date))
+
+        return {
+            success: true,
+        }
+    }
+} satisfies Actions;

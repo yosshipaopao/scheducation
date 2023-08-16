@@ -1,7 +1,7 @@
 import { error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import {db}from "$lib/server/newDB";
-import {SearchSubjects} from "$lib/server/schedule/newDB";
+import {db}from "$lib/server/DB";
+import {SearchSubjects} from "$lib/server/schedule/DB";
 
 export const GET = (async ({ url ,locals}) => {
     const session = await locals.getSession();

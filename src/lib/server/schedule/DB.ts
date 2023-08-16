@@ -1,5 +1,5 @@
-import type {db} from "$lib/server/newDB";
-import {DateEntry, TimeTable, Subject} from "$lib/newschema";
+import type {db} from "$lib/server/DB";
+import {DateEntry, TimeTable, Subject} from "$lib/schema";
 import {and, eq,  or, isNull, between, isNotNull, like, inArray} from "drizzle-orm";
 
 export interface MonthDateSchedule {
@@ -14,6 +14,7 @@ export interface WeekTimeSchedule {
     time: number,
     name: string,
     special: boolean,
+    id: number,
 }
 
 export interface DateTimeSchedule {
@@ -121,31 +122,39 @@ export const GetWeekSchedule = async (DB: typeof db, {year, month, date}: {
         date: TimeTable.date,
         time: TimeTable.time,
         name: Subject.name,
+        id: Subject.id,
     }).from(TimeTable).where(
         or(
             between(TimeTable.date, 0, 6),
             between(TimeTable.date, startInt, endInt)
         )
     ).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.time);
-    const map = new Map<number, WeekDateSchedule>();
+    const map = new Map<number, Map<number,WeekTimeSchedule>>();
     raw.forEach(v => {
-        if (!map.has(v.date)) map.set(v.date, []);
-        map.get(v.date)?.push({...v, name: v.name ?? "", special: v.date > 6});
+        if (!map.has(v.date)) map.set(v.date, new Map<number,WeekTimeSchedule>());
+        map.get(v.date)?.set(v.time,{...v, name: v.name ?? "", special: v.date > 6,id:v.id??-1});
     });
-
     const result: WeekSchedule = [];
     for (let i = 0; i < 7; i++) {
         const n = startDate.getFullYear() * 10000 + (startDate.getMonth() + 1) * 100 + startDate.getDate();
         const d = startDate.getDay();
         result.push([]);
         if (!holidays.has(n)) {
-            const m = Math.max(...(map.get(d)?.map(v => v.time + 1) ?? [0]), ...(map.get(n)?.map(v => v.time + 1) ?? [0]));
-            for (let j = 0; j < m; j++) result[i].push(map.get(n)?.[j] ?? map.get(d)?.[j] ?? ({
-                date: n,
-                time: j,
-                name: "this is bug maybe...",
-                special: false
-            }));
+            let m = 0;
+            const de = map.get(d);
+            const sp = map.get(n);
+            de?.forEach((v) => {
+                m = Math.max(m, v.time + 1);
+            })
+            for (let j = 0; j < m; j++) {
+                result[i].push(sp?.get(j) ??de?.get(j)?? ({
+                    date: i,
+                    time: j,
+                    name: "休み",
+                    id: -1,
+                    special: false,
+                }));
+            }
         }
         startDate.setDate(startDate.getDate() + 1);
     }

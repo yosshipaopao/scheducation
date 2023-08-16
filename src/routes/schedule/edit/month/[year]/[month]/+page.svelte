@@ -1,16 +1,33 @@
 <script lang="ts">
-    import {ButtonGroup, Button, Card, NumberInput, Toggle} from "flowbite-svelte";
+    import {ButtonGroup, Button, Card, NumberInput, Toggle, Toast} from "flowbite-svelte";
     import type {PageData} from "./$types";
     import {goto} from "$app/navigation";
-    import {ChevronLeftSolid, ChevronRightSolid} from "flowbite-svelte-icons";
+    import {CheckCircleOutline, ChevronLeftSolid, ChevronRightSolid} from "flowbite-svelte-icons";
     import MonthSkeleton from "$lib/components/schedule/MonthSkeleton.svelte";
+    import {slide} from "svelte/transition";
 
     export let data: PageData;
     let year = data.slug.year;
     let month = data.slug.month;
     let updated= new Map<number,boolean>();
 
-    let V :any[]|undefined;
+    const save=async ()=>{
+        const form = new FormData();
+        const data=Array.from(updated.entries())
+        if(data.length===0) return;
+        form.append("data", JSON.stringify(data));
+        const res=await fetch("",{
+            method:"POST",
+            body:form
+        });
+        if (res.ok) {
+            successToast = {show: true, msg: "保存しました"};
+            setTimeout(() => successToast.show=false, 3000);
+        } else {
+            errorToast = {show: true, msg: "保存に失敗しました\n"+res.status+" "+res.statusText};
+            setTimeout(() => errorToast.show=false, 3000);
+        }
+    }
     $: {
         if (month < 1) {
             year--;
@@ -22,7 +39,9 @@
         }
         if (year !== data.slug.year || month !== data.slug.month) goto(`/schedule/edit/month/${year}/${month}`)
     }
-    const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+    const days = ["日", "月", "火", "水", "木", "金", "土"];
+    let successToast = {show: false, msg: ""};
+    let errorToast = {show: false, msg: ""};
 </script>
 <Card size="xl" class="mt-4">
     <div class="w-full h-12 flex justify-between items-center mb-4">
@@ -41,7 +60,7 @@
         }}>
                 <ChevronRightSolid/>
             </Button>
-            <Button on:click={()=>console.log(updated)}>Save</Button>
+            <Button on:click={save}>Save</Button>
         </ButtonGroup>
     </div>
     <div class="overflow-x-auto">
@@ -60,8 +79,6 @@
                         <Toggle bind:checked={v.holiday} disabled={v.defaultHoliday} on:change={()=>{
                             if (updated.has(v.date)) updated.delete(v.date);
                             else updated.set(v.date, v.holiday);
-                            console.log(value)
-                            V=value
                         }}>Holiday</Toggle>
                     </Card>
                 {/each}
@@ -71,3 +88,13 @@
         </div>
     </div>
 </Card>
+<div class="fixed w-72 h-auto bottom-6 right-6 pointer-events-none gap-4 flex flex-col">
+    <Toast transition={slide} bind:open={successToast.show} color="blue">
+        <CheckCircleOutline slot="icon"/>
+        {successToast.msg}
+    </Toast>
+    <Toast transition={slide} bind:open={errorToast.show} color="red">
+        <p slot="icon">!</p>
+        <p>{errorToast.msg}</p>
+    </Toast>
+</div>

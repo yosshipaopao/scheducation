@@ -1,8 +1,8 @@
 import type {Actions, PageServerLoad} from './$types';
 import {error} from "@sveltejs/kit";
-import {db} from "$lib/server/newDB";
-import { GetDefaultSubjects} from "$lib/server/schedule/newDB";
-import {DateEntry, Subject, TimeTable} from "$lib/newschema";
+import {db} from "$lib/server/DB";
+import { GetDefaultSubjects} from "$lib/server/schedule/DB";
+import {DateEntry, Subject, TimeTable} from "$lib/schema";
 import {and, asc, desc, eq, inArray, isNull, or} from "drizzle-orm";
 
 interface EditDateTimeSchedule {
@@ -38,7 +38,6 @@ export const load = (async ({params, parent}) => {
     const defaultSubjects = await GetDefaultSubjects(db);
     const before: EditDateSchedule = [];
     const notUsedMap = new Map<number, EditDateTimeSchedule>();
-    if (!(isHoliday.length > 0 && isHoliday[0].holiday)) {
         const raw = await db.select({
             date: TimeTable.date,
             time: TimeTable.time,
@@ -74,6 +73,7 @@ export const load = (async ({params, parent}) => {
             }
             maxTime = Math.max(maxTime, v.time + 1);
         });
+    if (!(isHoliday.length > 0 && isHoliday[0].holiday)) {
         for (let i = 0; i < maxTime; i++) before.push(map.get(i) ?? {
             time: i,
             name: "なし",
@@ -84,6 +84,12 @@ export const load = (async ({params, parent}) => {
             unknown: true,
             id: -1
         });
+    }else{
+        notUsedMap.clear()
+        for (let i = 0; i < maxTime; i++) {
+            const d=map.get(i);
+            if (d) notUsedMap.set(i, {...d, unknown: false});
+        }
     }
     return {
         slug: {year, month, date},
@@ -157,7 +163,6 @@ export const actions = {
         for (let i = 0; i < maxTime+1; i++) {
             const defaultData = defaultMap.get(i);
             const specialData = specialMap.get(i);
-            console.log(defaultData,specialData);
             const data = parsedData[i];
             if(!data) {
                 if (!!defaultData || !!specialData) deleteData.push(i);
@@ -199,11 +204,11 @@ export const actions = {
                 });
             }
         }
-        console.log(insertData,updateData,deleteData);
 
         if (insertData.length > 0) await db.insert(TimeTable).values(insertData);
         for(const v of updateData) await db.update(TimeTable).set(v).where(and(eq(TimeTable.date, v.date), eq(TimeTable.time, v.time)));
         if (deleteData.length > 0) await db.delete(TimeTable).where(and(eq(TimeTable.date, baseInt), inArray(TimeTable.time, deleteData)));
 
+        if(insertData.length > 0||updateData.length > 0)await db.update(DateEntry).set({holiday: false}).where(eq(DateEntry.date, baseInt));
     }
 }satisfies Actions;

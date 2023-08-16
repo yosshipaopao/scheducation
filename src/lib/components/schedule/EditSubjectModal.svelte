@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Button, FloatingLabelInput, Label, Modal, Select} from "flowbite-svelte";
+    import {Button, FloatingLabelInput, Modal} from "flowbite-svelte";
 
     export let value: {
         id: number,
@@ -11,8 +11,10 @@
     export let open: boolean = false;
 
     export let onChange: Function = (v: typeof value) => {
+        console.log(v);
     };
     export let onFail: Function = (e: string) => {
+        console.log(e);
     };
 
     const Submit = async () => {
@@ -33,7 +35,7 @@
     }
 </script>
 
-<Modal title="Edit Subject" bind:open={open}>
+<Modal title="Edit Subject" bind:open={open} outsideclose>
     <form on:submit|preventDefault={Submit}>
         <div class="grid gap-6 mb-6 md:grid-cols-2">
             <div>

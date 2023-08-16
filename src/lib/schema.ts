@@ -1,27 +1,38 @@
-import {pgTable, serial, text, varchar, integer} from "drizzle-orm/pg-core";
+import {pgTable, serial, varchar, integer, boolean} from "drizzle-orm/pg-core";
 
-const scheduleColumns = {
+export const ClassEntry = pgTable("class", {
     id: serial("id").primaryKey(),
-    date: integer("date").notNull(),
-    time: integer("time").notNull(),
-    subject: varchar("subject").notNull(),
-    belongings: varchar("belongings").default("").notNull(),
-    special: integer("special").default(0).notNull(),
-    memo: text("memo").default("").notNull(),
-}
-
-export const schedule = pgTable("schedule", scheduleColumns);
-
-export const deleted = pgTable("deleted", scheduleColumns)
-
-
-export const subject = pgTable("subject", {
-    count: serial("count").primaryKey(),
-    id: varchar("id").notNull(),
+    grade: integer("grade").notNull(),
+    class: integer("class").notNull(),//0=>A,1=>B,2=>C,3=>D...
     name: varchar("name").notNull().default(""),
-    short: varchar("short").notNull().default(""),
     teacher: varchar("teacher").notNull().default(""),
     room: varchar("room").notNull().default(""),
-    memo: text("memo").notNull().default(""),
-    special: integer("special").default(0).notNull()
+});
+
+//class=>class_id
+//date=>ex:20230813
+//day=>0~6
+export const DateEntry = pgTable("DateEntry", {
+    id: serial("id").primaryKey(),//いらない
+    class: integer("class").notNull().references(() => ClassEntry.id),//まだいらない
+    date: integer("date").notNull(),
+    day: integer("day").notNull(),
+    info: varchar("info").notNull().default(""),
+    holiday: boolean("holiday").notNull().default(false)
+});
+export const TimeTable = pgTable("TimeTable", {
+    id: serial("id").primaryKey(),
+    class: integer("class").notNull().references(() => ClassEntry.id),
+    date: integer("date").notNull(),
+    time: integer("time").notNull(),
+    room: varchar("room").notNull().default(""),
+    info: varchar("info").notNull().default(""),
+    subject: integer("subject").notNull().references(() => Subject.id),
+});
+export const Subject = pgTable("Subject", {
+    id: serial("id").primaryKey(),
+    name: varchar("name").notNull().default(""),
+    teacher: varchar("teacher").notNull().default(""),
+    room: varchar("room").notNull().default(""),
+    info: varchar("info").notNull().default(""),
 });

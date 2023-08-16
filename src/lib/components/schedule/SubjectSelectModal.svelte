@@ -1,10 +1,10 @@
 <script lang="ts">
     import {Button, ButtonGroup, Input, InputAddon, Modal, Spinner} from 'flowbite-svelte';
     import {SearchOutline} from "flowbite-svelte-icons";
-    import type {SubjectData} from "$lib/server/schedule/newDB";
+    import type {SubjectData} from "$lib/server/schedule/DB";
 
     export let open: boolean = false;
-
+    export let restAble: boolean = false;
     export let onChange: (value: SubjectData) => void;
 
     let q: string = '';
@@ -60,6 +60,21 @@
                 {/each}
             </div>
         {:catch error}
+            {#if restAble}
+                <button class="grid grid-cols-2 w-full h-fit border border-white rounded-xl text-left p-2 bg-gray-500 text-white"
+                        on:click={()=>{
+                    onChange({
+                        name: "休み",
+                        id:-1,
+                        teacher: "",
+                        room: "",
+                        info: ""
+                    })
+                    open = false;
+                }}>
+                    休み
+                </button>
+            {/if}
             <p>{error}</p>
         {/await}
     </div>

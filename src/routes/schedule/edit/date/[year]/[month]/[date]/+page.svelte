@@ -8,7 +8,7 @@
         CheckCircleOutline,
         TrashBinSolid, AngleDownOutline
     } from "flowbite-svelte-icons";
-    import type {SubjectData} from "$lib/server/schedule/newDB";
+    import type {SubjectData} from "$lib/server/schedule/DB";
     import SubjectSelectModal from "$lib/components/schedule/SubjectSelectModal.svelte";
 
     export let data: PageData;
@@ -80,10 +80,7 @@
 
     let openSubjectModal = false;
 
-    let subjectSelect :{
-        open: boolean,
-        onChange: Function,
-    }={
+    let subjectSelect ={
         open: false,
         onChange: (v: SubjectData)=>{}
     }
@@ -139,7 +136,7 @@
                                         <Label defaultClass="cursor-pointer">
                                             Subject
                                             <div class="w-full h-12 flex items-center justify-between {SelectStyle}">
-                                                <p>{v.id ?? -1}</p>
+                                                <p>{v.name}</p>
                                                 <AngleDownOutline class="w-3 h-3 mr-4"/>
                                             </div>
                                         </Label>
@@ -207,6 +204,7 @@
             <div>
                 <Button class="flex flex-col !p-2" on:click={()=>{
                                     if(resetSchedule[schedule.length]&&!resetSchedule[schedule.length].unknown)schedule.push(resetSchedule[schedule.length])
+                                    else if(notUsedSchedule.has(schedule.length))schedule.push({...notUsedSchedule.get(schedule.length),hasNotUsed: true,special: false})
                                     else schedule.push({
                                         time: schedule.length,
                                         name: "",
