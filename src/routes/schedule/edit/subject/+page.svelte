@@ -10,6 +10,7 @@
     } from "flowbite-svelte";
     import {slide} from "svelte/transition";
     import {CheckSolid, SearchOutline} from "flowbite-svelte-icons";
+    import EditSubjectModal from "$lib/components/schedule/EditSubjectModal.svelte";
 
 
     let q = '';
@@ -37,6 +38,23 @@
         }else{
             errorToast.show=true;
             errorToast.msg="failed to delete\n"+res.status+" "+res.statusText;
+        }
+    }
+
+    let editModal={
+        open:false,
+        value:{
+            id:-1,
+            name:"",
+            teacher:"",
+            room:"",
+            info:""
+        },
+        onChange:(v:any)=>{},
+        onFail:(e:string)=>{
+            errorToast.show=true;
+            errorToast.msg=e;
+            setTimeout(()=>errorToast.show=false,5000);
         }
     }
 
@@ -80,7 +98,15 @@
                             </div>
                         </div>
                         <div class="w-24 flex flex-col gap-2">
-                            <Button size="sm">edit</Button>
+                            <Button size="sm" on:click={()=>{
+                                editModal.open=true;
+                                editModal.value=w;
+                                editModal.onChange=(x)=>{
+                                    w={...w,...x};
+                                    successToast.show=true;
+                                    successToast.msg="success edited";
+                                };
+                            }}>edit</Button>
                             <Button size="sm" on:click={()=>del(w.id)}>delete</Button>
                         </div>
                     </Card>
@@ -96,6 +122,7 @@
         </Button>
     </div>
 </Card>
+<EditSubjectModal bind:open={editModal.open} bind:value={editModal.value} bind:onChange={editModal.onChange} bind:onFail={editModal.onFail}/>
 <Toast class="fixed" position="bottom-right" transition={slide} bind:open={errorToast.show} color="red">
     <p slot="icon">!</p>
     {errorToast.msg}

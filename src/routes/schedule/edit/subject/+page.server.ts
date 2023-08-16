@@ -21,11 +21,30 @@ export const actions = {
         if (isNaN(id)) throw error(400, "id must be a number");
         const subject = (await db.select({
             id: Subject.id,
-        }).from(Subject).where(and(eq(Subject.id, id),isNull(TimeTable.id))).leftJoin(TimeTable, eq(Subject.id, TimeTable.subject))).map(v => v.id);
-        if(subject.length===0) throw error(400,"Must be a subject that is not used in the timetable");
-        else await db.delete(Subject).where(eq(Subject.id,id));
+        }).from(Subject).where(and(eq(Subject.id, id), isNull(TimeTable.id))).leftJoin(TimeTable, eq(Subject.id, TimeTable.subject))).map(v => v.id);
+        if (subject.length === 0) throw error(400, "Must be a subject that is not used in the timetable");
+        else await db.delete(Subject).where(eq(Subject.id, id));
         return {
             success: true,
         }
     }),
+    update: (async ({request, locals}) => {
+        const session = await locals.getSession();
+        if (!session?.user) throw error(403, "Not logged in");
+        const formData = await request.formData();
+        const dataStr = formData.get("data");
+        if (!dataStr) throw error(400, "data is required");
+        const data = JSON.parse(dataStr as string);
+        if (!data.id) throw error(400, "id is required");
+        await db.update(Subject).set({
+            name: data.name,
+            teacher: data.teacher as string,
+            room: data.room as string,
+            info: data.info as string,
+        }).where(eq(Subject.id, data.id));
+
+        return {
+            success: true,
+        }
+    })
 } satisfies Actions;
