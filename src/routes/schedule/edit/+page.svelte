@@ -1,9 +1,5 @@
 <script lang="ts">
-    import {Button, ButtonGroup, Card, Input, NumberInput, Toggle} from "flowbite-svelte";
-    import TrashBinSolid from "flowbite-svelte-icons/TrashBinSolid.svelte";
-    import CloseSolid from "flowbite-svelte-icons/CloseSolid.svelte";
-    import EditOutline from "flowbite-svelte-icons/EditOutline.svelte";
-
+    import {Button, ButtonGroup, Card, NumberInput} from "flowbite-svelte";
     const today = new Date();
     let year = today.getFullYear();
     let month = today.getMonth() + 1;

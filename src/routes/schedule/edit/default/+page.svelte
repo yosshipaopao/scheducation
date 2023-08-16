@@ -1,9 +1,7 @@
 <script lang="ts">
     import type {ActionData, PageData} from './$types';
     import {Button, ButtonGroup, Card, Input, Select, Toast} from "flowbite-svelte";
-    import PlusSolid from "flowbite-svelte-icons/PlusSolid.svelte";
-    import MinusSolid from "flowbite-svelte-icons/MinusSolid.svelte";
-    import CheckCircleOutline from "flowbite-svelte-icons/CheckCircleOutline.svelte";
+    import {PlusSolid,MinusSolid,CheckCircleOutline} from "flowbite-svelte-icons";
     import AddSubjectModal from "$lib/components/schedule/AddSubjectModal.svelte";
     import {slide} from "svelte/transition";
 

@@ -80,9 +80,9 @@
                         })()}</Card>
                         {#each v as w}
                             <Card class="h-24 !p-2 dark:text-white relative flex items-center justify-center">
-                                {#if w.special}
-                                    <Indicator color="red" border size="xl" placement="top-right"/>
-                                {/if}
+                                    {#if w.special}
+                                        <Indicator color="red" border size="xl" placement="top-right"/>
+                                    {/if}
                                 {JSON.stringify(w)}
                             </Card>
                         {/each}

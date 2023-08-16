@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Modal, Button, Select, Label, Input, FloatingLabelInput} from "flowbite-svelte";
+    import {Modal, Button, Select, Label, FloatingLabelInput} from "flowbite-svelte";
 
     export let open = false;
     export let subjects: any[];

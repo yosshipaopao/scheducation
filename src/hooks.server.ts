@@ -1,12 +1,13 @@
 import {SvelteKitAuth} from "@auth/sveltekit"
 import Google from "@auth/core/providers/google"
 import type {Handle} from "@sveltejs/kit";
+import {GOOGLE_CLIENT_ID,GOOGLE_CLIENT_SECRET, SECRET} from "$env/static/private";
 
-export const handle = SvelteKitAuth(async (event) => {
+export const handle = SvelteKitAuth(async () => {
     return {
         providers: [Google({
-            clientId: import.meta.env.VITE_GOOGLE_CLIENT_ID as string,
-            clientSecret: import.meta.env.VITE_GOOGLE_CLIENT_SECRET as string,
+            clientId: GOOGLE_CLIENT_ID,
+            clientSecret: GOOGLE_CLIENT_SECRET,
             authorization: {
                 params: {
                     prompt: "consent",
@@ -31,7 +32,7 @@ export const handle = SvelteKitAuth(async (event) => {
                 return true // Do different verification for other providers that don't have `email_verified`
             },
         },
-        secret: import.meta.env.VITE_SECRET as string,
+        secret: SECRET,
         trustHost: true
     }
 }) satisfies Handle;

@@ -27,6 +27,19 @@
         })
     }
 
+    const del=async (id:number)=>{
+        const form=new FormData();
+        form.append("id",id.toString());
+        const res=await fetch("?/delete",{method:"POST",body:form});
+        if(res.ok){
+            successToast.show=true;
+            successToast.msg="success deleted"
+        }else{
+            errorToast.show=true;
+            errorToast.msg="failed to delete\n"+res.status+" "+res.statusText;
+        }
+    }
+
     let errorToast = {
         show: false,
         msg: ''
@@ -68,7 +81,7 @@
                         </div>
                         <div class="w-24 flex flex-col gap-2">
                             <Button size="sm">edit</Button>
-                            <Button size="sm">delete</Button>
+                            <Button size="sm" on:click={()=>del(w.id)}>delete</Button>
                         </div>
                     </Card>
                 {/each}
