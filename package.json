@@ -14,6 +14,7 @@
     "@sveltejs/kit": "^1.22.4",
     "@types/node": "^20.4.9",
     "autoprefixer": "^10.4.14",
+    "drizzle-kit": "^0.19.12",
     "flowbite-svelte-icons": "^0.2.6",
     "postcss": "^8.4.27",
     "postcss-load-config": "^4.0.1",

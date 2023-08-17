@@ -1,5 +1,8 @@
-import {pgTable, serial, varchar, integer, boolean} from "drizzle-orm/pg-core";
+import {pgTable, serial, varchar, integer, boolean, text, timestamp, primaryKey} from "drizzle-orm/pg-core";
+import type {AdapterAccount} from "@auth/core/adapters";
 
+
+//Class
 export const ClassEntry = pgTable("class", {
     id: serial("id").primaryKey(),
     grade: integer("grade").notNull(),
@@ -8,6 +11,62 @@ export const ClassEntry = pgTable("class", {
     teacher: varchar("teacher").notNull().default(""),
     room: varchar("room").notNull().default(""),
 });
+
+
+//User
+
+export const users = pgTable("user", {
+    id: text("id").notNull().primaryKey(),
+    name: text("name"),
+    email: text("email").notNull(),
+    emailVerified: timestamp("emailVerified", { mode: "date" }),
+    image: text("image"),
+    class: integer("class").references(() => ClassEntry.id),
+})
+
+export const accounts = pgTable(
+    "account",
+    {
+        userId: text("userId")
+            .notNull()
+            .references(() => users.id, { onDelete: "cascade" }),
+        type: text("type").$type<AdapterAccount["type"]>().notNull(),
+        provider: text("provider").notNull(),
+        providerAccountId: text("providerAccountId").notNull(),
+        refresh_token: text("refresh_token"),
+        access_token: text("access_token"),
+        expires_at: integer("expires_at"),
+        token_type: text("token_type"),
+        scope: text("scope"),
+        id_token: text("id_token"),
+        session_state: text("session_state"),
+    },
+    (account) => ({
+        compoundKey: primaryKey(account.provider, account.providerAccountId),
+    })
+)
+
+export const sessions = pgTable("session", {
+    sessionToken: text("sessionToken").notNull().primaryKey(),
+    userId: text("userId")
+        .notNull()
+        .references(() => users.id, { onDelete: "cascade" }),
+    expires: timestamp("expires", { mode: "date" }).notNull(),
+})
+
+export const verificationTokens = pgTable(
+    "verificationToken",
+    {
+        identifier: text("identifier").notNull(),
+        token: text("token").notNull(),
+        expires: timestamp("expires", { mode: "date" }).notNull(),
+    },
+    (vt) => ({
+        compoundKey: primaryKey(vt.identifier, vt.token),
+    })
+)
+
+//Schedule
 
 //class=>class_id
 //date=>ex:20230813
@@ -35,4 +94,21 @@ export const Subject = pgTable("Subject", {
     teacher: varchar("teacher").notNull().default(""),
     room: varchar("room").notNull().default(""),
     info: varchar("info").notNull().default(""),
+});
+
+//tasks
+export const Task = pgTable("Task", {
+    id: serial("id").primaryKey(),
+    class: integer("class").notNull().references(() => ClassEntry.id),
+    limitDate: integer("limitDate").notNull(),
+    limitTime: integer("limitTime").notNull(),
+    title: varchar("title").notNull().default(""),
+    description: varchar("description").notNull().default(""),
+});
+
+export const TaskStatus = pgTable("TaskStatus", {
+    id: serial("id").primaryKey(),
+    task: integer("task").notNull().references(() => Task.id),
+    status: boolean("status").notNull().default(false),
+    finishDate: integer("finishDate").notNull().default(-1),
 });

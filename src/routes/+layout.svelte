@@ -18,9 +18,12 @@
     } from "flowbite-svelte";
 
     import {signIn, signOut} from '@auth/sveltekit/client';
-
+    import {browser} from "$app/environment";
+    import {goto} from "$app/navigation";
 
     $: activeUrl = $page.url.pathname;
+
+    $: if($page.data.session&&$page.data.session.user&&!$page.url.pathname.startsWith("/setup"))if(!$page.data.session.user?.class)if(browser)goto("/setup")
 
     const date = new Date();
 </script>
@@ -61,11 +64,13 @@
             <NavLi id="nav-schedule" class="cursor-pointer" active={activeUrl.startsWith("/schedule")}>
                 <Chevron aligned>SCHEDULE</Chevron>
             </NavLi>
-
+            <NavLi href="/tasks" active={activeUrl.startsWith("/tasks")}>TASKS</NavLi>
             <Dropdown triggeredBy="#nav-schedule" class="w-[80vw] md:w-44 z-20">
                 <DropdownItem href="/schedule/month/{date.getFullYear()}/{date.getMonth()+1}">Month</DropdownItem>
-                <DropdownItem href="/schedule/week/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Week</DropdownItem>
-                <DropdownItem href="/schedule/date/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Date</DropdownItem>
+                <DropdownItem href="/schedule/week/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Week
+                </DropdownItem>
+                <DropdownItem href="/schedule/date/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Date
+                </DropdownItem>
                 <DropdownDivider/>
                 <DropdownItem href="/schedule/edit">Edit</DropdownItem>
             </Dropdown>
