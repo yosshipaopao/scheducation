@@ -23,7 +23,8 @@ export interface DateTimeSchedule {
     teacher: string,
     room: string,
     info: string,
-    special: boolean
+    special: boolean,
+    unknown?: boolean,
 }
 
 export interface SubjectData {
@@ -206,11 +207,12 @@ export const GetDateSchedule = async (DB: typeof db, {year, month, date}: {
     const result: DateSchedule = [];
     for (let i = 0; i < maxTime; i++) result.push(map.get(i) ?? {
         time: i,
-        name: "不明",
+        name: "なし",
         teacher: "",
         room: "",
-        info: "this is bug maybe...",
-        special:true
+        info: "休み",
+        special:false,
+        unknown: true,
     });
     return result;
 }
