@@ -23,7 +23,7 @@
 
     $: activeUrl = $page.url.pathname;
 
-    $: if($page.data.session&&$page.data.session.user&&!$page.url.pathname.startsWith("/setup"))if(!$page.data.session.user?.class)if(browser)goto("/setup")
+    $: if ($page.data.session && $page.data.session.user && !$page.url.pathname.startsWith("/setup")) if (!$page.data.session.user?.class) if (browser && $page.url.pathname !== "/") goto("/setup")
 
     const date = new Date();
 </script>

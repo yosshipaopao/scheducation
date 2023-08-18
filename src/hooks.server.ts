@@ -27,6 +27,7 @@ export const handle = SvelteKitAuth(async () => {
         callbacks: {
             async session({session,user }) {
                 if(user.class&&session.user)session.user.class=user.class
+                if(user.id&&session.user)session.user.id=user.id
                 return session
             },
             async signIn({account, profile}) {
