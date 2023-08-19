@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {Button, ButtonGroup, Input, InputAddon, Modal, Spinner} from 'flowbite-svelte';
+    import {Button, ButtonGroup, Input, InputAddon, Modal, Search, Spinner} from 'flowbite-svelte';
     import {SearchOutline} from "flowbite-svelte-icons";
     import type {SubjectData} from "$lib/server/schedule/DB";
 
@@ -27,10 +27,7 @@
 </script>
 <Modal title="Select Subject" bind:open={open} autoclose={false} outsideclose>
     <ButtonGroup class="w-full" size="sm">
-        <InputAddon>
-            <SearchOutline/>
-        </InputAddon>
-        <Input bind:value={q}/>
+        <Search bind:value={q}/>
         <Button on:click={()=>{q=""}}>
             Clear
         </Button>

@@ -3,13 +3,10 @@ import type {AdapterAccount} from "@auth/core/adapters";
 
 
 //Class
-export const ClassEntry = pgTable("class", {
+export const ClassEntry = pgTable("ClassEntry", {
     id: serial("id").primaryKey(),
     grade: integer("grade").notNull(),
-    class: integer("class").notNull(),//0=>A,1=>B,2=>C,3=>D...
-    name: varchar("name").notNull().default(""),
-    teacher: varchar("teacher").notNull().default(""),
-    room: varchar("room").notNull().default(""),
+    class: integer("class").notNull(),
 });
 
 
