@@ -86,7 +86,7 @@
                                     {#if w.special}
                                         <Indicator color="red" border size="xl" placement="top-right"/>
                                     {/if}
-                                    {JSON.stringify(w)}
+                                    {w.name}
                                 {/if}
                             </Card>
                         {/each}

@@ -63,8 +63,14 @@
                             <p class="text-2xl dark:text-white">{v.time + 1}</p>
                             <p class="text-2xl dark:text-white">{v.name}</p>
                         </Card>
-                        <Card size="xl" class="grow">
-                            <p>{JSON.stringify(v)}</p>
+                        <Card size="xl" class="grow grid grid-cols-2 items-center">
+                            <div>
+                                <p>先生:{v.teacher}</p>
+                                <p>教室:{v.room}</p>
+                            </div>
+                            <div>
+                                <p>備考:{v.info}</p>
+                            </div>
                         </Card>
                     </div>
                 {/each}

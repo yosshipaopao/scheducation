@@ -1,5 +1,5 @@
 <script lang="ts">
-    import {ButtonGroup, Button, Card, NumberInput, Toggle, Toast} from "flowbite-svelte";
+    import {ButtonGroup, Button, Card, NumberInput, Toggle, Toast, Input} from "flowbite-svelte";
     import type {PageData} from "./$types";
     import {goto} from "$app/navigation";
     import {CheckCircleOutline, ChevronLeftSolid, ChevronRightSolid} from "flowbite-svelte-icons";
@@ -9,7 +9,7 @@
     export let data: PageData;
     let year = data.slug.year;
     let month = data.slug.month;
-    let updated= new Map<number,boolean>();
+    let updated= new Map<number,{ h:boolean,i:string }>();
 
     const save=async ()=>{
         const form = new FormData();
@@ -76,9 +76,13 @@
                 {#each value as v}
                     <Card class="h-28 !p-2 relative dark:text-white flex flex-col items-center justify-center gap-2">
                         <a class="w-full h-full flex items-center justify-center" href="/schedule/edit/date/{Math.round(v.date / 10000)}/{Math.round(v.date / 100) % 100}/{v.date % 100}"><p>{Math.round(v.date / 100) % 100}/{v.date % 100}</p></a>
+                        <Input size="sm" bind:value={v.info} on:change={()=>{
+                            if (updated.has(v.date)) updated.get(v.date).i=v.info;
+                            else updated.set(v.date,{h: v.holiday,i: v.info});
+                        }}/>
                         <Toggle bind:checked={v.holiday} disabled={v.defaultHoliday} on:change={()=>{
-                            if (updated.has(v.date)) updated.delete(v.date);
-                            else updated.set(v.date, v.holiday);
+                            if (updated.has(v.date)) updated.get(v.date).h=v.holiday;
+                            else updated.set(v.date,{h: v.holiday,i: v.info});
                         }}>Holiday</Toggle>
                     </Card>
                 {/each}

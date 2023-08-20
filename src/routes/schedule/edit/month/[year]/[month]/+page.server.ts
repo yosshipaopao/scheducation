@@ -87,27 +87,28 @@ export const actions = {
         const data = JSON.parse(dataStr);
         if (!Array.isArray(data)) throw error(400, "data must be correct format");
 
-        const map = new Map<number, boolean>();
+        const map = new Map<number, { h:boolean,i:string }>();
 
         for (const v of data) {
             const date = parseInt(v[0]);
-            const holiday = v[1] === true || v[1] === "true";
+            const holiday = v[1].h === true || v[1].h === "true";
+            const info = v[1].i;
             if (isNaN(date) || date < 7) continue;
-            map.set(date, holiday);
+            map.set(date, {h:holiday,i:info});
         }
         const already = new Set((await db.select({
             date: DateEntry.date,
         }).from(DateEntry).where(inArray(DateEntry.date, Array.from(map.keys())))).map(v => v.date));
-        const ins: { date: number, holiday: boolean,class:number,day:number }[] = [];
-        const upd: { date: number, holiday: boolean }[] = [];
+        const ins: { date: number, holiday: boolean,info:string,class:number,day:number }[] = [];
+        const upd: { date: number, holiday: boolean ,info:string}[] = [];
         map.forEach((v, k) => {
             const day = new Date(k).getDay();
-            if (already.has(k)) upd.push({date: k, holiday: v});
-            else ins.push({date: k, holiday: v,class:-1,day});
+            if (already.has(k)) upd.push({date: k, holiday: v.h,info:v.i});
+            else ins.push({date: k, holiday: v.h,info:v.i,class:-1,day});
         });
 
         if(ins.length>0) await db.insert(DateEntry).values(ins)
-        for (const v of upd) await db.update(DateEntry).set({holiday: v.holiday}).where(eq(DateEntry.date, v.date))
+        for (const v of upd) await db.update(DateEntry).set({holiday: v.holiday,info:v.info}).where(eq(DateEntry.date, v.date))
 
         return {
             success: true,

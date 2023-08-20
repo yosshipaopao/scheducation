@@ -36,7 +36,7 @@
                 Scheducation
             </span>
         </NavBrand>
-        <div class="flex items-center gap-4 md:order-2">
+        <div class="flex items-center gap-2 md:order-2 md:gap-4">
             <DarkMode/>
             <Avatar id="user-menu" class="cursor-pointer"
                     src={$page.data.session?.user?.image??"/icon/icon-512x512.png"}/>
@@ -48,7 +48,7 @@
                     <span class="block text-sm"> {$page.data.session.user?.name} </span>
                     <span class="block truncate text-sm font-medium"> {$page.data.session.user?.email} </span>
                 </DropdownHeader>
-                <DropdownItem>Settings</DropdownItem>
+                <DropdownItem href="/setup"> Settings</DropdownItem>
                 <DropdownDivider/>
                 <DropdownItem on:click={signOut}>Sign out</DropdownItem>
             {:else}
@@ -64,7 +64,7 @@
             <NavLi id="nav-schedule" class="cursor-pointer" active={activeUrl.startsWith("/schedule")}>
                 <Chevron aligned>SCHEDULE</Chevron>
             </NavLi>
-            <NavLi href="/tasks" active={activeUrl.startsWith("/tasks")}>TASKS</NavLi>
+            <NavLi href="/task" active={activeUrl.startsWith("/task")}>TASK</NavLi>
             <Dropdown triggeredBy="#nav-schedule" class="w-[80vw] md:w-44 z-20">
                 <DropdownItem href="/schedule/month/{date.getFullYear()}/{date.getMonth()+1}">Month</DropdownItem>
                 <DropdownItem href="/schedule/week/{date.getFullYear()}/{date.getMonth()+1}/{date.getDate()}">Week
@@ -83,7 +83,5 @@
 <Footer>
     <FooterCopyright href="https://yosshipaopao.com" by="yosshipaopao" year={2023}/>
     <FooterLinkGroup ulClass="flex flex-wrap items-center mt-3 text-sm text-gray-500 dark:text-gray-400 sm:mt-0">
-        <FooterLink href="/about">About</FooterLink>
-        <FooterLink href="/privacy">Privacy Policy</FooterLink>
     </FooterLinkGroup>
 </Footer>

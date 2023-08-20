@@ -93,10 +93,11 @@ export const Subject = pgTable("Subject", {
     info: varchar("info").notNull().default(""),
 });
 
-//tasks
+//task
 export const Task = pgTable("Task", {
-    id: serial("id").primaryKey(),
+    id:varchar("id").primaryKey(),
     class: integer("class").notNull().references(() => ClassEntry.id),
+    user: text("user").notNull().references(() => users.id),
     limitDate: integer("limitDate").notNull(),
     limitTime: integer("limitTime").notNull(),
     title: varchar("title").notNull().default(""),
@@ -105,7 +106,6 @@ export const Task = pgTable("Task", {
 
 export const TaskStatus = pgTable("TaskStatus", {
     id: serial("id").primaryKey(),
-    task: integer("task").notNull().references(() => Task.id),
-    status: boolean("status").notNull().default(false),
-    finishDate: integer("finishDate").notNull().default(-1),
+    user: text("user").notNull().references(() => users.id),
+    task: varchar("task").notNull().references(() => Task.id),
 });

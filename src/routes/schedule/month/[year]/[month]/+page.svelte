@@ -63,7 +63,7 @@
                             <Indicator color="red" border size="xl" placement="top-right"/>
                         {/if}
                         <p>{Math.round(v.date%10000/100)}/{v.date%100}</p>
-                        <p class="text-2xl">{v.info!==""?v.info:"通常"}</p>
+                        <p class="text-2xl">{v.info!==""?v.info:""}</p>
                     </Card>
                 {/each}
             {:catch error}

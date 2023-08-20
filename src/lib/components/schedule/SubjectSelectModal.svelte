@@ -21,7 +21,7 @@
                     const data = await fetch(`/schedule/edit/api/search?q=${query}&offset=${offset}`);
                     resolve(await data.json());
                 }
-            }, 1000);
+            }, 500);
         })
     }
 </script>
