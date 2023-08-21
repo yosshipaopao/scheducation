@@ -1,6 +1,17 @@
 /// <reference types="@sveltejs/kit" />
 import { build, files, version } from '$service-worker';
+import { cleanupOutdatedCaches, precacheAndRoute } from 'workbox-precaching';
+import { registerRoute } from 'workbox-routing';
+import { NetworkFirst } from 'workbox-strategies';
 
+cleanupOutdatedCaches();
+
+precacheAndRoute(self.__WB_MANIFEST);
+
+registerRoute(
+    ({ url }) => true,
+    new NetworkFirst({ cacheName: `runtime-cache-${version}`, networkTimeoutSeconds: 45 })
+);
 // Create a unique cache name for this deployment
 const CACHE = `cache-${version}`;
 
