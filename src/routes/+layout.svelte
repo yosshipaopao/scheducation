@@ -20,13 +20,38 @@
     import {signIn, signOut} from '@auth/sveltekit/client';
     import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
+    import { pwaInfo } from 'virtual:pwa-info';
+    import {onMount} from "svelte";
 
     $: activeUrl = $page.url.pathname;
 
     $: if ($page.data.session && $page.data.session.user && !$page.url.pathname.startsWith("/setup")) if (!$page.data.session.user?.class) if (browser && $page.url.pathname !== "/") goto("/setup")
 
     const date = new Date();
+    $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : '';
+    onMount(async () => {
+        if (pwaInfo) {
+            const { registerSW } = await import('virtual:pwa-register')
+            registerSW({
+                immediate: true,
+                onRegistered(r) {
+                    // uncomment following code if you want check for updates
+                     r && setInterval(() => {
+                       console.log('Checking for sw update')
+                        r.update()
+                    }, 20000 /* 20s for testing purposes */)
+                    console.log(`SW Registered: ${r}`)
+                },
+                onRegisterError(error) {
+                    console.log('SW registration error', error)
+                }
+            })
+        }
+    })
 </script>
+<svelte:head>
+    {@html webManifestLink}
+</svelte:head>
 <header>
     <Navbar let:hidden let:toggle
             navClass="fixed px-4 py-2.5 w-full z-20 top-0 left-0 border-b">
@@ -39,7 +64,7 @@
         <div class="flex items-center gap-2 md:order-2 md:gap-4">
             <DarkMode/>
             <Avatar id="user-menu" class="cursor-pointer"
-                    src={$page.data.session?.user?.image??"/icon/icon-512x512.png"}/>
+                    src={$page.data.session?.user?.image??"/icon/logo.png"}/>
             <NavHamburger on:click={toggle} class1="w-full md:flex md:w-auto md:order-1"/>
         </div>
         <Dropdown placement="bottom" triggeredBy="#user-menu">
