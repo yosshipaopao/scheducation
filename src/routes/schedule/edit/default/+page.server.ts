@@ -12,7 +12,10 @@ export const load = (async ({locals}: { locals: any }) => {
         time: TimeTable.time,
         name: Subject.name,
         id: Subject.id,
-    }).from(TimeTable).where(between(TimeTable.date, 0, 6)
+    }).from(TimeTable).where(and(
+        between(TimeTable.date, 0, 6),
+        eq(TimeTable.class, session.user?.class)
+        )
     ).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.time);
     const map = new Map<number, Map<number, {
         date: number,
@@ -70,7 +73,9 @@ export const actions = {
             time: TimeTable.time,
             name: Subject.name,
             id: Subject.id,
-        }).from(TimeTable).where(between(TimeTable.date, 0, 6)
+        }).from(TimeTable).where(and(between(TimeTable.date, 0, 6),
+            eq(TimeTable.class, session.user?.class)
+            )
         ).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.time);
         const map = new Map<number, Map<number, {
             date: number,
@@ -94,7 +99,6 @@ export const actions = {
             subject:number,
         }[]=[];
         const upd:{
-            class:number,
             date:number,
             time:number,
             subject:number,
@@ -109,7 +113,7 @@ export const actions = {
                 if(!!n&&n.id===v.id) continue;
                 if(!n&&v.id!==-1) {
                     ins.push({
-                        class:-1,
+                        class:session.user?.class??-1   ,
                         date:i,
                         time:v.time,
                         subject:v.id,
@@ -121,7 +125,6 @@ export const actions = {
                     });
                 }else if(!!n&&n.id!==v.id) {
                     upd.push({
-                        class:-1,
                         date:i,
                         time:v.time,
                         subject:v.id,
@@ -131,8 +134,8 @@ export const actions = {
         }
 
         if(ins.length>0) await db.insert(TimeTable).values(ins)
-        for(const v of upd) await db.update(TimeTable).set({subject:v.subject,}).where(and(eq(TimeTable.date,v.date), eq(TimeTable.time,v.time)))
-        for(const v of del) await db.delete(TimeTable).where(and(eq(TimeTable.date,v.date), eq(TimeTable.subject,v.id)))
+        for(const v of upd) await db.update(TimeTable).set({subject:v.subject,}).where(and(eq(TimeTable.date,v.date), eq(TimeTable.time,v.time), eq(TimeTable.class,session.user?.class)))
+        for(const v of del) await db.delete(TimeTable).where(and(eq(TimeTable.date,v.date), eq(TimeTable.subject,v.id), eq(TimeTable.class,session.user?.class)))
 
         return {
             success: true,

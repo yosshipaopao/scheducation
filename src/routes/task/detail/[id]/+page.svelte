@@ -8,7 +8,7 @@
     const done = async (id: string) => {
         const formData = new FormData();
         formData.append("id", id);
-        const res = await fetch("?/done", {
+        const res = await fetch("/task/?/done", {
             method: "POST",
             body: formData
         })
@@ -39,6 +39,9 @@
     }
 </script>
 
+<svelte:head>
+    <title>TaskDetail | Scheducation</title>
+</svelte:head>
 <Card size="xl" class="w-full flex flex-row">
     {#await data.streamed.data}
         <div >Loading...</div>

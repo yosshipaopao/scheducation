@@ -85,6 +85,9 @@
         onChange: (v: SubjectData)=>{}
     }
 </script>
+<svelte:head>
+    <title>時間割編集 | Scheducation</title>
+</svelte:head>
 <Card size="xl">
     <div class="w-full h-12 flex justify-between items-center mb-4">
         <Button on:click={()=>openSubjectModal=true}>追加</Button>

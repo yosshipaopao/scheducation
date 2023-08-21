@@ -2,7 +2,7 @@ import type {PageServerLoad, Actions} from "./$types";
 import {error, redirect} from "@sveltejs/kit";
 import {db} from "$lib/server/DB";
 import {DateEntry, TimeTable} from "$lib/schema";
-import {between, eq, inArray, or} from "drizzle-orm";
+import {and, between, eq, inArray, or} from "drizzle-orm";
 
 export const load = (async ({parent, params}) => {
     const {session} = await parent();
@@ -31,17 +31,21 @@ export const load = (async ({parent, params}) => {
                 const total = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
                 const hasSchedule = new Set((await db.selectDistinct({
                     date: TimeTable.date,
-                }).from(TimeTable).where(or(
+                }).from(TimeTable).where(and(or(
                     between(TimeTable.date, 0, 6),
-                    between(TimeTable.date, startInt, endInt))
+                    between(TimeTable.date, startInt, endInt)),
+                    eq(TimeTable.class, session.user?.class)
+                    )
                 )).map(v => v.date));
                 const raw = await db.select({
                     date: DateEntry.date,
                     holiday: DateEntry.holiday,//OverRide Holiday Check
                     info: DateEntry.info,//Add Info Check
                 }).from(DateEntry)
-                    .where(
-                        between(DateEntry.date, startInt, endInt)
+                    .where(and(
+                        between(DateEntry.date, startInt, endInt),
+                        eq(DateEntry.class, session.user?.class)
+                        )
                     );
                 const holidayMap = new Set<number>();
                 const infoMap = new Map<number, string>();
@@ -104,11 +108,11 @@ export const actions = {
         map.forEach((v, k) => {
             const day = new Date(k).getDay();
             if (already.has(k)) upd.push({date: k, holiday: v.h,info:v.i});
-            else ins.push({date: k, holiday: v.h,info:v.i,class:-1,day});
+            else ins.push({date: k, holiday: v.h,info:v.i,class:session.user?.class,day});
         });
 
         if(ins.length>0) await db.insert(DateEntry).values(ins)
-        for (const v of upd) await db.update(DateEntry).set({holiday: v.holiday,info:v.info}).where(eq(DateEntry.date, v.date))
+        for (const v of upd) await db.update(DateEntry).set({holiday: v.holiday,info:v.info}).where(and(eq(DateEntry.date, v.date), eq(DateEntry.class, session.user?.class)));
 
         return {
             success: true,

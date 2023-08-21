@@ -30,6 +30,9 @@
     }
     const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 </script>
+<svelte:head>
+    <title>時間割編集 | Scheducation</title>
+</svelte:head>
 <div class="w-full grid grid-cols-4 gap-2">
     <Card href="/schedule/edit/default" class="!p-2 h-fit flex items-center justify-center">
         Default

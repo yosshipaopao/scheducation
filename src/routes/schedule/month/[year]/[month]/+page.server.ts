@@ -13,7 +13,7 @@ export const load = (async ({params, parent}) => {
         slug: {year,month},
         streamed:{
             data:new Promise<MonthSchedule>(async (resolve) => {
-                const data = await GetMonthSchedule(db, {year, month});
+                const data = await GetMonthSchedule(db, {year, month,userClass:session.user?.class??0 as number});
                 resolve(data)
             })
         }

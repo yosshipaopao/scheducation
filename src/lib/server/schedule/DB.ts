@@ -41,9 +41,10 @@ export type WeekSchedule = WeekDateSchedule[];
 export type DateSchedule = DateTimeSchedule[];
 
 export type SubjectsData = SubjectData[];
-export const GetMonthSchedule = async (DB: typeof db, {year, month}: {
+export const GetMonthSchedule = async (DB: typeof db, {year, month,userClass}: {
     year: number,
-    month: number
+    month: number,
+    userClass: number
 }) => {
     const startDate = new Date(year, month - 1, 1);
     const endDate = new Date(year, month, 0);
@@ -54,9 +55,13 @@ export const GetMonthSchedule = async (DB: typeof db, {year, month}: {
     const total = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)) + 1;
     const hasSchedule = await DB.selectDistinct({
         date: TimeTable.date,
-    }).from(TimeTable).where(or(
-        between(TimeTable.date, 0, 6),
-        between(TimeTable.date, startInt, endInt))
+    }).from(TimeTable).where(and(
+        or(
+            between(TimeTable.date, 0, 6),
+            between(TimeTable.date, startInt, endInt)
+        ),
+        eq(TimeTable.class, userClass)
+        )
     );
     const TimeTableDates = new Set<number>(
         hasSchedule.map(v => v.date)
@@ -70,7 +75,10 @@ export const GetMonthSchedule = async (DB: typeof db, {year, month}: {
         info: DateEntry.info,//Add Info Check
     }).from(DateEntry)
         .where(
-            between(DateEntry.date, startInt, endInt)
+            and(
+                between(DateEntry.date, startInt, endInt),
+                eq(DateEntry.class, userClass)
+            )
         );
     const holidayMap = new Set<number>();
     const infoMap = new Map<number, string>();
@@ -101,10 +109,11 @@ export const GetMonthSchedule = async (DB: typeof db, {year, month}: {
     return result;
 };
 
-export const GetWeekSchedule = async (DB: typeof db, {year, month, date}: {
+export const GetWeekSchedule = async (DB: typeof db, {year, month, date,userClass}: {
     year: number,
     month: number,
-    date: number
+    date: number,
+    userClass: number
 }) => {
     const startDate = new Date(year, month - 1, date);
     startDate.setDate(startDate.getDate() - 3);
@@ -116,7 +125,8 @@ export const GetWeekSchedule = async (DB: typeof db, {year, month, date}: {
         date: DateEntry.date,
     }).from(DateEntry).where(and(
             between(DateEntry.date, startInt, endInt),
-            eq(DateEntry.holiday, true)
+            eq(DateEntry.holiday, true),
+            eq(DateEntry.class, userClass)
         )
     )).map(v => v.date));
     const raw = await DB.select({
@@ -124,10 +134,12 @@ export const GetWeekSchedule = async (DB: typeof db, {year, month, date}: {
         time: TimeTable.time,
         name: Subject.name,
         id: Subject.id,
-    }).from(TimeTable).where(
-        or(
-            between(TimeTable.date, 0, 6),
-            between(TimeTable.date, startInt, endInt)
+    }).from(TimeTable).where(and(
+            or(
+                between(TimeTable.date, 0, 6),
+                between(TimeTable.date, startInt, endInt)
+            ),
+            eq(TimeTable.class, userClass)
         )
     ).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).orderBy(TimeTable.time);
     const map = new Map<number, Map<number,WeekTimeSchedule>>();
@@ -162,10 +174,11 @@ export const GetWeekSchedule = async (DB: typeof db, {year, month, date}: {
     return result;
 };
 
-export const GetDateSchedule = async (DB: typeof db, {year, month, date}: {
+export const GetDateSchedule = async (DB: typeof db, {year, month, date,userClass}: {
     year: number,
     month: number,
-    date: number
+    date: number,
+    userClass: number
 }) => {
     const baseDate = new Date(year, month - 1, date);
     const day = baseDate.getDay();
@@ -185,7 +198,8 @@ export const GetDateSchedule = async (DB: typeof db, {year, month, date}: {
         info: Subject.info,
     }).from(TimeTable).where(and(
         inArray(TimeTable.date, [baseInt, day]),
-        or(isNull(DateEntry.holiday), eq(DateEntry.holiday, false))
+        or(isNull(DateEntry.holiday), eq(DateEntry.holiday, false)),
+        eq(TimeTable.class, userClass)
     )).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).leftJoin(DateEntry, eq(TimeTable.date, DateEntry.date)).orderBy(TimeTable.time);
     const map = new Map<number, DateTimeSchedule>();
     let maxTime = 0;
@@ -202,7 +216,7 @@ export const GetDateSchedule = async (DB: typeof db, {year, month, date}: {
         } else {
             map.set(v.time, {...data,special:v.date > 6 });
         }
-        maxTime = Math.max(maxTime, v.time) + 1;
+        maxTime = Math.max(maxTime, v.time+1);//todo fix
     });
     const result: DateSchedule = [];
     for (let i = 0; i < maxTime; i++) result.push(map.get(i) ?? {
@@ -218,7 +232,7 @@ export const GetDateSchedule = async (DB: typeof db, {year, month, date}: {
 }
 
 
-export const GetDefaultSubjects = async (DB: typeof db):Promise<SubjectsData> => {
+export const GetDefaultSubjects = async (DB: typeof db,{userClass}:{userClass:number}):Promise<SubjectsData> => {
     const raw = (await DB.select({
         id: Subject.id,
         name: Subject.name,
@@ -228,7 +242,8 @@ export const GetDefaultSubjects = async (DB: typeof db):Promise<SubjectsData> =>
     }).from(TimeTable).leftJoin(Subject, eq(TimeTable.subject, Subject.id)).where(
         and(
             between(TimeTable.date, 0, 6),
-            isNotNull(Subject.id)
+            isNotNull(Subject.id),
+            eq(TimeTable.class, userClass)
         )
     )) ;
     return raw as SubjectsData;
@@ -242,7 +257,7 @@ export const SearchSubjects = async (DB: typeof db, {limit = 50, offset = 0, q =
         info: Subject.info,
     }).from(Subject)
         .where(
-            like(Subject.name, `%${q}%`),
+            like(Subject.name, `%${q}%`)
         )
         .limit(limit)
         .offset(offset);

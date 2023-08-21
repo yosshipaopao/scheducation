@@ -106,6 +106,9 @@
         msg: ''
     }
 </script>
+<svelte:head>
+    <title>Task | Scheducation</title>
+</svelte:head>
 <Card size="xl" class="w-full h-16 flex flex-row items-center justify-between !p-2 mb-10">
     <Button on:click={() => openAddModal=true}>追加</Button>
     <p>Task</p>

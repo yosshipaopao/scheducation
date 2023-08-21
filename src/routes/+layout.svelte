@@ -31,7 +31,7 @@
     <Navbar let:hidden let:toggle
             navClass="fixed px-4 py-2.5 w-full z-20 top-0 left-0 border-b">
         <NavBrand href="/">
-            <img src="/icon/icon-512x512.png" alt="logo" class="w-10 h-10 mr-2 rounded-full"/>
+            <img src="/icon/logo.png" alt="logo" class="w-10 h-10 mr-2 rounded-full"/>
             <span class="self-center whitespace-nowrap text-xl font-semibold dark:text-white">
                 Scheducation
             </span>

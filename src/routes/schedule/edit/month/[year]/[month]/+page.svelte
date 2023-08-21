@@ -43,6 +43,9 @@
     let successToast = {show: false, msg: ""};
     let errorToast = {show: false, msg: ""};
 </script>
+<svelte:head>
+    <title>時間割編集 | Scheducation</title>
+</svelte:head>
 <Card size="xl" class="mt-4">
     <div class="w-full h-12 flex justify-between items-center mb-4">
         <Button on:click={() => {

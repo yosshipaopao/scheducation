@@ -94,6 +94,9 @@
         msg: ''
     }
 </script>
+<svelte:head>
+    <title>時間割編集 | Scheducation</title>
+</svelte:head>
 <Card size="xl" class="flex flex-col items-center gap-2">
     <ButtonGroup class="w-full" size="sm">
         <InputAddon>

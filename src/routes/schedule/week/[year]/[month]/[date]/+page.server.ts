@@ -15,7 +15,7 @@ export const load = (async ({params, parent}) => {
         slug: {year, month, date},
         streamed:{
             data:new Promise<WeekSchedule>(async (resolve) => {
-                const data = await GetWeekSchedule(db, {year, month, date});
+                const data = await GetWeekSchedule(db, {year, month, date,userClass:session.user?.class??0 as number});
                 resolve(data)
             })
         }
