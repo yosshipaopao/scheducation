@@ -7,7 +7,7 @@
         Avatar,
         DarkMode,
         Footer,
-        FooterCopyright, FooterLink,
+        FooterCopyright,
         FooterLinkGroup,
         Navbar,
         NavBrand,
@@ -20,7 +20,7 @@
     import {signIn, signOut} from '@auth/sveltekit/client';
     import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
-    import { pwaInfo } from 'virtual:pwa-info';
+    import {pwaInfo} from 'virtual:pwa-info';
     import {onMount} from "svelte";
 
     $: activeUrl = $page.url.pathname;
@@ -29,15 +29,29 @@
 
     const date = new Date();
     $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : '';
+    function urlBase64ToUint8Array(base64String:string) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/\-/g, '+')
+            .replace(/_/g, '/');
+
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
     onMount(async () => {
         if (pwaInfo) {
-            const { registerSW } = await import('virtual:pwa-register')
+            const {registerSW} = await import('virtual:pwa-register')
             registerSW({
                 immediate: true,
                 onRegistered(r) {
                     // uncomment following code if you want check for updates
-                     r && setInterval(() => {
-                       console.log('Checking for sw update')
+                    r && setInterval(() => {
+                        console.log('Checking for sw update')
                         r.update()
                     }, 20000 /* 20s for testing purposes */)
                     console.log(`SW Registered: ${r}`)
@@ -47,6 +61,7 @@
                 }
             })
         }
+
     })
 </script>
 <svelte:head>

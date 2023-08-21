@@ -109,3 +109,9 @@ export const TaskStatus = pgTable("TaskStatus", {
     user: text("user").notNull().references(() => users.id),
     task: varchar("task").notNull().references(() => Task.id),
 });
+
+export const NotificationKey = pgTable("NotificationKey", {
+    id: serial("id").primaryKey(),
+    user: text("user").notNull().references(() => users.id),
+    subscription: text("subscription").notNull(),
+});
