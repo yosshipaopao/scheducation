@@ -131,7 +131,7 @@
                                     /{Math.round(v.limitDate % 10000 / 100)}/{v.limitDate % 100} : {v.limitTime}</p>
                             </div>
                             <div class="flex ml-auto">
-                                <Button on:click={()=>done(v.id)}>提出済み</Button>
+                                <Button on:click={()=>done(v.id)}>提出</Button>
                             </div>
                         </Card>
                     {/each}
@@ -150,6 +150,9 @@
                             <p class="text-sm">期限: {Math.round(v.limitDate / 10000)}
                                 /{Math.round(v.limitDate % 10000 / 100)}/{v.limitDate % 100} : {v.limitTime}</p>
                         </div>
+                        <div class="flex ml-auto">
+                            <Button on:click={()=>done(v.id)}>提出</Button>
+                        </div>
                     </Card>
                 {/each}
             </div>
@@ -165,6 +168,9 @@
                             <p class="text-sm">期限: {Math.round(v.limitDate / 10000)}
                                 /{Math.round(v.limitDate % 10000 / 100)}/{v.limitDate % 100} : {v.limitTime}</p>
                         </div>
+                        <div class="flex ml-auto">
+                            <Button on:click={()=>done(v.id)}>提出</Button>
+                        </div>
                     </Card>
                 {/each}
             </div>
@@ -179,6 +185,9 @@
                             <p class="text-xl">{v.title}</p>
                             <p class="text-sm">期限: {Math.round(v.limitDate / 10000)}
                                 /{Math.round(v.limitDate % 10000 / 100)}/{v.limitDate % 100} : {v.limitTime}</p>
+                        </div>
+                        <div class="flex ml-auto">
+                            <Button on:click={()=>done(v.id)}>提出</Button>
                         </div>
                     </Card>
                 {/each}
@@ -196,7 +205,7 @@
                                 /{Math.round(v.limitDate % 10000 / 100)}/{v.limitDate % 100} : {v.limitTime}</p>
                         </div>
                         <div class="flex ml-auto">
-                            <Button>提出済み</Button>
+                            <Button on:click={()=>done(v.id)}>提出</Button>
                         </div>
                     </Card>
                 {/each}

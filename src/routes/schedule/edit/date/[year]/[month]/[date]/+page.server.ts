@@ -198,7 +198,6 @@ export const actions = {
                     })
                 }
             } else if (defaultData) {
-                console.log(defaultData, data);
                 if (data.id !== -1 && !data.unknown && (data.id !== defaultData.id.toString() || data.room !== defaultData.room || data.info !== defaultData.info)) insertData.push({
                     class: session.user?.class,
                     date: baseInt,

@@ -216,7 +216,7 @@ export const GetDateSchedule = async (DB: typeof db, {year, month, date,userClas
         } else {
             map.set(v.time, {...data,special:v.date > 6 });
         }
-        maxTime = Math.max(maxTime, v.time+1);//todo fix
+        maxTime = Math.max(maxTime, v.time+1);
     });
     const result: DateSchedule = [];
     for (let i = 0; i < maxTime; i++) result.push(map.get(i) ?? {
