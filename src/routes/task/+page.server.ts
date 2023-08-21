@@ -3,7 +3,6 @@ import {error} from "@sveltejs/kit";
 import {db} from "$lib/server/DB";
 import {Task, TaskStatus} from "$lib/schema";
 import {and, eq, isNull, or} from "drizzle-orm";
-import * as crypto from "crypto";
 
 interface TaskData {
     id: string,
@@ -11,7 +10,13 @@ interface TaskData {
     limitDate: number,
     limitTime: number
 }
-
+const uuid = () =>
+    ([1e7] + -1e3 + -4e3 + -8e3 + -1e11).replace(/[018]/g, (c) =>
+        (
+            c ^
+            (crypto.getRandomValues(new Uint8Array(1))[0] & (15 >> (c / 4)))
+        ).toString(16)
+    );
 export const load = (async ({parent}) => {
     const {session} = await parent()
     if (!session?.user) throw error(403, "Not logged in");
@@ -78,6 +83,7 @@ export const load = (async ({parent}) => {
 
 export const actions = {
     add: async ({request, locals}) => {
+
         const session = await locals.getSession();
         if (!session?.user) throw error(403, "Not logged in");
         const form = await request.formData();
@@ -88,7 +94,7 @@ export const actions = {
         const description = form.get("description");
         if (type === null || title === null || limitDate === null || limitTime === null || description === null) throw error(400, "Invalid params");
         await db.insert(Task).values({
-            id: crypto.randomUUID() as string,
+            id: uuid() as string,
             class: type === "class" ? session.user.class as number : null,
             user: type === "user" ? session.user.id : undefined,
             limitDate: parseInt((limitDate as string).replaceAll("-", "")),
