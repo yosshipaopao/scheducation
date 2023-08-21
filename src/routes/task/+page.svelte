@@ -227,7 +227,7 @@
         <Input type="date" bind:value={addTaskInput.deadline}/>
     </Label>
     <Label>
-        <p>期限</p>
+        <p>期限(時間)</p>
         <Input type="number" bind:value={addTaskInput.time}/>
     </Label>
     <Label>
