@@ -17,8 +17,8 @@ const config = {
     adapter: adapter({
       runtime: 'nodejs18.x',
     }),
-    serviceWorker:{
-      register:false
+    files:{
+      serviceWorker: 'src/sw.js',
     }
   },
 };

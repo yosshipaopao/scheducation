@@ -20,53 +20,13 @@
     import {signIn, signOut} from '@auth/sveltekit/client';
     import {browser} from "$app/environment";
     import {goto} from "$app/navigation";
-    import {pwaInfo} from 'virtual:pwa-info';
-    import {onMount} from "svelte";
 
     $: activeUrl = $page.url.pathname;
 
     $: if ($page.data.session && $page.data.session.user && !$page.url.pathname.startsWith("/setup")) if (!$page.data.session.user?.class) if (browser && $page.url.pathname !== "/") goto("/setup")
 
     const date = new Date();
-    $: webManifestLink = pwaInfo ? pwaInfo.webManifest.linkTag : '';
-    function urlBase64ToUint8Array(base64String:string) {
-        const padding = '='.repeat((4 - base64String.length % 4) % 4);
-        const base64 = (base64String + padding)
-            .replace(/\-/g, '+')
-            .replace(/_/g, '/');
-
-        const rawData = window.atob(base64);
-        const outputArray = new Uint8Array(rawData.length);
-
-        for (let i = 0; i < rawData.length; ++i) {
-            outputArray[i] = rawData.charCodeAt(i);
-        }
-        return outputArray;
-    }
-    onMount(async () => {
-        if (pwaInfo) {
-            const {registerSW} = await import('virtual:pwa-register')
-            registerSW({
-                immediate: true,
-                onRegistered(r) {
-                    // uncomment following code if you want check for updates
-                    r && setInterval(() => {
-                        console.log('Checking for sw update')
-                        r.update()
-                    }, 20000 /* 20s for testing purposes */)
-                    console.log(`SW Registered: ${r}`)
-                },
-                onRegisterError(error) {
-                    console.log('SW registration error', error)
-                }
-            })
-        }
-
-    })
 </script>
-<svelte:head>
-    {@html webManifestLink}
-</svelte:head>
 <header>
     <Navbar let:hidden let:toggle
             navClass="fixed px-4 py-2.5 w-full z-20 top-0 left-0 border-b">
